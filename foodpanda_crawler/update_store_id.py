@@ -1,19 +1,21 @@
+import configparser
 import pandas as pd
 import requests
 from sqlalchemy import create_engine, Table, Column, String, MetaData
 from sqlalchemy.sql import select, func
 import time
-import json
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
 # db info
-db_name = 'foodpanda_store_info.db'
-store_tbl = 'foodpanda_store_list'
+db_name = config['database']['db_path']
+store_tbl = config['database']['store_table']
 
 engine = create_engine(f'sqlite:///{db_name}')
 conn = engine.connect()
 
-chain_url = 'https://disco.deliveryhero.io/listing/api/v1/pandora/chain?chain_code={}&include=metadata&country=tw'
+chain_url = config['foodpanda']['chain_restaurant_url']
 header = {
     'user-agent':'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36',
     'x-disco-client-id':'web'}
@@ -49,6 +51,7 @@ def update_store(store, store_data):
             # break
             continue
 
+
 def get_tbl():
     meta = MetaData()
     store = Table(f'{store_tbl}', meta, 
@@ -61,6 +64,7 @@ def get_tbl():
 		Column('chk', String))
     
     return store
+
 
 def get_store_list(store):
     stmt = select([store]).where((func.length(store.c.store_id) > 4))

@@ -1,4 +1,4 @@
-
+import configparser
 import pandas as pd
 import requests
 from sqlalchemy import create_engine, Table, Column, String, MetaData
@@ -6,9 +6,10 @@ from sqlalchemy.sql import select, func
 import time
 import json
 
+config = configparser.ConfigParser()
+config.read('config.ini')
 
-# store_data = pd.read_csv('data/all_stores.csv')
-api_url = 'https://tw.fd-api.com/api/v5/vendors/{}'
+api_url = config['foodpanda']['menu_api']
 params = {
     'include': 'menus',
     'language_id': '6',
@@ -17,19 +18,16 @@ params = {
 }
 
 # db info
-db_name = 'foodpanda_store_info.db'
-store_tbl = 'foodpanda_store_list'
-menu_tbl = 'foodpanda_store_menu'
-schedule_tbl = 'foodpanda_store_schedule'
-
+db_name = config['database']['db_path']
+store_tbl = config['database']['store_table']
+menu_tbl = config['database']['menu_table']
+schedule_tbl = config['database']['schedule_table']
 engine = create_engine(f'sqlite:///{db_name}')
-conn = engine.connect()
 
-def get_store_menu(store_data, store, menu, schedule):
+def get_store_menu(store_data, store, menu, schedule, conn):
     
     menu_list=pd.DataFrame()
     schedule_list=pd.DataFrame()
-
     for rows in store_data:
         # store menu url
         url = api_url.format(rows['store_id'])
@@ -45,6 +43,7 @@ def get_store_menu(store_data, store, menu, schedule):
 
                 # menus
                 if data['data']['menus'] == None: continue
+                
                 tmp = data['data']['menus'][0]
                 tmp_menu=pd.DataFrame()
                 for item in tmp['menu_categories']: 
@@ -105,8 +104,7 @@ def get_store_menu(store_data, store, menu, schedule):
         except Exception as e:
             print(rows['store'], e)
             time.sleep(2)
-            continue
-
+        
     return schedule_list, menu_list
 
 
@@ -148,29 +146,38 @@ def get_tbl():
     return store, menu, schedule
 
 
-def get_store_list(store):
+def get_store_list(store, conn):
+
+    conn = engine.connect()
     stmt = select([store]).where((func.length(store.c.store_id) == 4)&(store.c.chk==''))
     result = conn.execute(stmt)
+
     return result
 
 
 def main():
 
-    # check & create schedule & menu rbl
+    # check & create schedule & menu tbl
     store, menu, schedule = get_tbl()
+    try:
+        conn = engine.connect()
 
-    # get data from store tbl
-    store_data = get_store_list(store)
+        # get data from store tbl
+        store_data = get_store_list(store, conn)
 
-    # get store menu / schedule
-    schedule_list, menu_list = get_store_menu(store_data, store, menu, schedule)
+        # get store menu / schedule
+        schedule_list, menu_list = get_store_menu(store_data, store, menu, schedule, conn)
 
-    # schedule_list.to_csv('data/all_stores_schedule.csv', index=False)
-    # menu_list.to_csv('data/all_stores_menu.csv', index=False)
-    
+        # schedule_list.to_csv('data/all_stores_schedule.csv', index=False)
+        # menu_list.to_csv('data/all_stores_menu.csv', index=False)
+    except Exception as e: 
+        print('error:', str(e))
+
+    finally: 
+        conn.close()
+
     print('finished crawling & parsing!!')
 
 
 if __name__ == "__main__":
     main()
-    conn.close()
