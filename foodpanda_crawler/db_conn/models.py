@@ -23,12 +23,12 @@ class FStore(Base):
     chk = Column('chk', Boolean)
     record_time = Column(DateTime(timezone=True), server_default=func.now())
     
-    fmenu = relationship("foodpanda_store_menu")
-    fschedule = relationship("foodpanda_store_schedule")
+    # fmenu = relationship("foodpanda_store_menu")
+    # fschedule = relationship("foodpanda_store_schedule")
 
     def __repr__(self):
         return "Foodpanda Store: {}, Rating: {}, City: {}, Getting suc: {}"\
-        .format(self.store, self.rating, self.city_name, self.chk)
+        .format(self.store_name, self.rating, self.city_name, self.chk)
 
     @classmethod
     def find_by_name(cls, session, store):

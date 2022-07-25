@@ -1,6 +1,7 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, literal
 from sqlalchemy.orm import sessionmaker
-# from sqlalchemy.pool import NullPool
+from sqlalchemy.sql import exists
+from db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
 import logging
 
 
@@ -46,7 +47,7 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(obj_model).filter(obj_model.store.like('%{}%'.format(name))).all()
+            results = session.query(obj_model).filter(obj_model.store_name.like('%{}%'.format(name))).all()
         except Exception as exc:
             pass
         finally:
@@ -57,7 +58,20 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(obj_model).filter(obj_model.store.in_(store_list)&(obj_model.city_name==city_name)).all()
+            results = session.query(obj_model).filter(obj_model.store_name.in_(store_list), obj_model.city_name==city_name).all()
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+        return results
+
+    def select_uncheck_store(self, obj_model):
+        session = self._get_db_session()
+        results = []
+        try:
+            results = session.query(obj_model).filter(obj_model.chk==False, obj_model.store_id!='').all()
+            
         except Exception as exc:
             pass
         finally:
@@ -67,12 +81,70 @@ class StoreReviewsDB(DBObj):
     def insert_store_df(self, obj_model, store_data):
         session = self._get_db_session()
         try:
-            data = store_data.to_dict(orient='records')
-            session.bulk_insert_mappings(obj_model, data)
-            session.commit()
-            
+            # data = store_data.to_dict(orient='records')
+            # session.bulk_insert_mappings(obj_model, data)
+            for data in store_data.to_dict(orient='records'):
+                q = session.query(obj_model).filter(obj_model.city_name==data['city_name'], 
+                                                                        obj_model.store_id==data['store_id'],
+                                                                        obj_model.chain_id==data['chain_id'],
+                                                                        obj_model.store_name==data['store_name'],
+                                                                        obj_model.store_url==data['store_url'])
+                if not session.query(literal(True)).filter(q.exists()).scalar():
+                    print('not exist', data['store_name'])
+                    data = obj_model(**data)
+                    session.add(data)
+                    session.commit()
+
         except Exception as e:
             print(e)
+            pass
+        finally:
+            session.close()
+
+    def insert_menu_df(self, obj_model, menu_data):
+        session = self._get_db_session()
+        try:
+            for data in menu_data.to_dict(orient='records'):
+                q = session.query(obj_model).filter(obj_model.dishes_id==data['dishes_id'])
+                if not session.query(literal(True)).filter(q.exists()).scalar():
+                    data = obj_model(**data)
+                    session.add(data)
+                session.commit()
+
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+
+    def insert_schedule_df(self, obj_model, s_data):
+        session = self._get_db_session()
+        # conn = self.engine.connect()
+        try:
+            data = [obj_model(**s) for s in s_data.to_dict(orient='records')]
+            # conn.execute(obj_model.insert(), data)
+            session.add_all(data)
+            session.commit()
+
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+
+    def update_store_df(self, obj_model, update_dict):
+        session = self._get_db_session()
+        try:
+            session.query(obj_model).\
+                    filter((obj_model.store_id==update_dict['store_id']),
+                            (obj_model.store_name==update_dict['store_name']),
+                            (obj_model.store_name==update_dict['city_name'])).\
+                    update({'address':update_dict['address'],
+                            'longitude':update_dict['longitude'],
+                            'latitude':update_dict['latitude'],
+                            'chk':True})
+            session.commit()
+        except Exception as exc:
             pass
         finally:
             session.close()
@@ -82,7 +154,7 @@ if __name__ == '__main__':
     db_conn_info = 'sqlite:///db/foodpanda_store_info1.db'
     store_reviews_db = StoreReviewsDB(base=Base, info=db_conn_info)
 
-    results = store_reviews_db.select_store(fStore, '肉')
+    results = store_reviews_db.select_store(ＦStore, '肉')
     print(results)
 
     store_reviews_db.engine_dispose()
