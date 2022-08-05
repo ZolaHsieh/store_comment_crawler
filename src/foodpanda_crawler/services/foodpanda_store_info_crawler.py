@@ -4,7 +4,7 @@ import requests
 import time
 
 from tqdm import tqdm
-from db_conn.models import FStore, FStoreMenu, FStoreSchedule
+from src.db_conn.models import FStore, FStoreMenu, FStoreSchedule
 
 class FoodpandaCrawler():
     def __init__(self, db_obj):
@@ -134,11 +134,38 @@ class FoodpandaCrawler():
                 time.sleep(2)
 
     def update_chain_store_id(self):
-        
         chain_store = self.db_obj.select_chain_store(FStore)
         for row in chain_store:
-            print(row)
-            break
+            # store menu url
+            url = self.chain_url.format(row['chain_id'])
+            print(row['store_name'], url)
+            try: 
+                # get store menu by api
+                r = requests.get(url=url, headers=self.headers) 
+                if r.status_code == requests.codes.ok:
+                    data = r.json()
+                    store_id = data["data"]["items"][0]["code"]
+                    web_url = data["data"]["items"][0]['redirection_url']
+                    # print(stoe_id, web_url)
+
+                    # update store tbl
+                    update_dict = {'city_name':row.city_name,
+                                    'store_name':row.store_name,
+                                    'chain_id':row.chain_id,
+                                    'store_id':store_id,
+                                    'store_url':web_url}
+                    self.db_obj.update_store_id(FStore, update_dict)
+                    time.sleep(2)
+                    break
+                else: 
+                    print('請求失敗', r)
+                    raise Exception('請求失敗 ' + str(r))
+
+            except Exception as e:
+                print(row['store'], e)
+                time.sleep(2)
+                # break
+                continue
 
     def __sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
         
