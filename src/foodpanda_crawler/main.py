@@ -1,11 +1,10 @@
-
 import argparse
 import logging
 
-from common.setup_logger import logger
-from db_conn.db_conn import StoreReviewsDB
-from db_conn.models import Base
-from services.foodpanda_store_info_crawler import FoodpandaCrawler #get_store_list, get_store_list, update_store_id
+# from src.common.setup_logger import logger
+from src.db_conn.db_conn import StoreReviewsDB
+from src.db_conn.models import Base
+from .services.foodpanda_store_info_crawler import FoodpandaCrawler #get_store_list, get_store_list, update_store_id
 
 
 
@@ -19,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-uc', '--update_chain', action="store_true")
     args = parser.parse_args()
 
-    db_conn_info = 'sqlite:///../db/foodpanda_store_info.db?charset=utf8'
+    db_conn_info = 'sqlite:///./db/foodpanda_store_info.db?charset=utf8'
     store_reviews_db = StoreReviewsDB(base=Base, info=db_conn_info)
     foodpanda_crawler = FoodpandaCrawler(db_obj=store_reviews_db)
     

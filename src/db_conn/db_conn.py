@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, literal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
+from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
 import logging
 
 
@@ -159,6 +159,20 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
 
+    def update_store_id(self, obj_model, update_dict):
+        session = self._get_db_session()
+        try:
+            session.query(obj_model).\
+                    filter((obj_model.chain_id==update_dict['chain_id']),
+                            (obj_model.store_name==update_dict['store_name']),
+                            (obj_model.city_name==update_dict['city_name'])).\
+                    update({'store_id':update_dict['store_id'],
+                            'store_url':update_dict['store_url']})
+            session.commit()
+        except Exception as exc:
+            pass
+        finally:
+            session.close()
 
 if __name__ == '__main__':
     db_conn_info = 'sqlite:///db/foodpanda_store_info1.db'
