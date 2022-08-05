@@ -136,11 +136,11 @@ class FoodpandaCrawler():
                 time.sleep(2)
                 break
 
-    def update_store_id(self):
+    def update_chain_store_id(self):
         
         chain_store = self.db_obj.select_chain_store(FStore)
         for row in chain_store:
-            print(row)
+            print('row: ',row)
             break
 
     def __sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
