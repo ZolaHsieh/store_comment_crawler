@@ -124,8 +124,6 @@ class FoodpandaCrawler():
                         'longitude': data['data']['longitude'],
                         'latitude': data['data']['latitude']}
                     self.db_obj.update_store_df(FStore, update_dict)                        
-
-                    break
                     time.sleep(2)
                 else: 
                     print('請求失敗', r)
@@ -134,7 +132,6 @@ class FoodpandaCrawler():
             except Exception as e:
                 print(rows.store_name, e)
                 time.sleep(2)
-                break
 
     def update_chain_store_id(self):
         

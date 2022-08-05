@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey, Column, String, DateTime, DECIMAL, Integer, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.sql import func
+import datetime
 
 Base = declarative_base()
 
@@ -21,7 +21,7 @@ class FStore(Base):
     longitude = Column('longitude', String)
     latitude = Column('latitude', String)
     chk = Column('chk', Boolean)
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
+    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
     
     # fmenu = relationship("foodpanda_store_menu")
     # fschedule = relationship("foodpanda_store_schedule")
@@ -49,7 +49,7 @@ class FStoreMenu(Base):
     tags = Column('tags', String)
     
     store_id = Column('store_id', String, ForeignKey('foodpanda_store.store_id'))
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
+    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
     def __repr__(self):
         pass
@@ -65,7 +65,7 @@ class FStoreSchedule(Base):
     opening_type = Column('opening_type', String)
     opening_time = Column('opening_time', String) 
     closing_time = Column('closing_time', String)
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
+    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
     
     def __repr__(self):

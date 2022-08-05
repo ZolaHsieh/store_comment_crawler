@@ -14,9 +14,9 @@ if __name__ == '__main__':
     logger.info('Start job.')
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-store', default=False)
-    parser.add_argument('-menu', default=False)
-    parser.add_argument('-update_chain', default=False)
+    parser.add_argument('-s', '--store', action="store_true")
+    parser.add_argument('-m', '--menu', action="store_true")
+    parser.add_argument('-uc', '--update_chain', action="store_true")
     args = parser.parse_args()
 
     db_conn_info = 'sqlite:///../db/foodpanda_store_info.db?charset=utf8'
@@ -35,10 +35,10 @@ if __name__ == '__main__':
             logger.info(f'{city_name}:{city_url}')
             try:
                 foodpanda_crawler.get_all_stores_of_city(city_name, city_url)
-                # break
+                break
             except Exception as e:
                 logger.error(e)
-                # break
+                break
                 continue
         logger.info('End store list of each city.')
     
