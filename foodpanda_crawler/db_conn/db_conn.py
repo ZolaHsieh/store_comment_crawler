@@ -78,6 +78,17 @@ class StoreReviewsDB(DBObj):
             session.close()
         return results
 
+    def select_chain_store(self, obj_model):
+        session = self._get_db_session()
+        results = []
+        try:
+            results = session.query(obj_model).filter(obj_model.chain_id!='', obj_model.store_id=='').all()
+        except Exception as exc:
+            pass
+        finally:
+            session.close()
+        return results
+
     def insert_store_df(self, obj_model, store_data):
         session = self._get_db_session()
         try:
@@ -122,7 +133,6 @@ class StoreReviewsDB(DBObj):
         # conn = self.engine.connect()
         try:
             data = [obj_model(**s) for s in s_data.to_dict(orient='records')]
-            # conn.execute(obj_model.insert(), data)
             session.add_all(data)
             session.commit()
 
@@ -138,7 +148,7 @@ class StoreReviewsDB(DBObj):
             session.query(obj_model).\
                     filter((obj_model.store_id==update_dict['store_id']),
                             (obj_model.store_name==update_dict['store_name']),
-                            (obj_model.store_name==update_dict['city_name'])).\
+                            (obj_model.city_name==update_dict['city_name'])).\
                     update({'address':update_dict['address'],
                             'longitude':update_dict['longitude'],
                             'latitude':update_dict['latitude'],

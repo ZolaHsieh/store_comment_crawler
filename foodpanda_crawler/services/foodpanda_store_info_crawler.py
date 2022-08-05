@@ -14,17 +14,15 @@ class FoodpandaCrawler():
         self.chain_url = 'https://disco.deliveryhero.io/listing/api/v1/pandora/chain?chain_code={}&include=metadata&country=tw'
         self.menu_api = 'https://tw.fd-api.com/api/v5/vendors/{}'
         self.headers = {'accept': '*/*',
-			'accept-encoding': 'gzip, deflate, br',
-			'content-type': 'text/plain;charset=UTF-8',
-			'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36',
-			'x-disco-client-id':'web'
-			}
-        self.menu_params = {
-            'include': 'menus',
-            'language_id': '6',
-            'basket_currency': 'TWD',
-            'opening_type': 'delivery',
-        }
+                        'accept-encoding': 'gzip, deflate, br',
+                        'content-type': 'text/plain;charset=UTF-8',
+                        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.64 Safari/537.36',
+                        'x-disco-client-id':'web'}
+
+        self.menu_params = {'include': 'menus',
+                            'language_id': '6',
+                            'basket_currency': 'TWD',
+                            'opening_type': 'delivery'}
 
     def get_all_city_url(self):
         # logger.info('get_all_city_url start')
@@ -127,7 +125,7 @@ class FoodpandaCrawler():
                         'latitude': data['data']['latitude']}
                     self.db_obj.update_store_df(FStore, update_dict)                        
 
-                    # break
+                    break
                     time.sleep(2)
                 else: 
                     print('請求失敗', r)
@@ -136,7 +134,14 @@ class FoodpandaCrawler():
             except Exception as e:
                 print(rows.store_name, e)
                 time.sleep(2)
-                # break
+                break
+
+    def update_store_id(self):
+        
+        chain_store = self.db_obj.select_chain_store(FStore)
+        for row in chain_store:
+            print(row)
+            break
 
     def __sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
         

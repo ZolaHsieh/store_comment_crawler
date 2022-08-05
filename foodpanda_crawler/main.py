@@ -16,6 +16,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-store', default=False)
     parser.add_argument('-menu', default=False)
+    parser.add_argument('-update_chain', default=False)
     args = parser.parse_args()
 
     db_conn_info = 'sqlite:///../db/foodpanda_store_info.db?charset=utf8'
@@ -44,9 +45,12 @@ if __name__ == '__main__':
     if args.menu:
       logger.info('Start crawling menus of stores.')
       foodpanda_crawler.get_menu()      
-
       logger.info('End crawling menus of stores.')
 
+    if args.update_chain:
+        logger.info('Start update chain stores.')
+        foodpanda_crawler.update_chain_store_id()
+        logger.info('End update chain stores.')
 
 
     store_reviews_db.engine_dispose()
