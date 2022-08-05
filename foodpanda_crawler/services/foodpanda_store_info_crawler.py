@@ -140,7 +140,7 @@ class FoodpandaCrawler():
         
         chain_store = self.db_obj.select_chain_store(FStore)
         for row in chain_store:
-            print('row: ',row)
+            print(row)
             break
 
     def __sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
