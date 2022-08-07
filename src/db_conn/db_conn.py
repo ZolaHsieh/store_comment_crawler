@@ -142,17 +142,15 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
 
-    def update_store_df(self, obj_model, update_dict):
+    def update_store_info(self, obj_model, update_dict):
         session = self._get_db_session()
         try:
             session.query(obj_model).\
-                    filter((obj_model.store_id==update_dict['store_id']),
+                    filter((obj_model.city_name==update_dict['city_name']),
                             (obj_model.store_name==update_dict['store_name']),
-                            (obj_model.city_name==update_dict['city_name'])).\
-                    update({'address':update_dict['address'],
-                            'longitude':update_dict['longitude'],
-                            'latitude':update_dict['latitude'],
-                            'chk':True})
+                            (obj_model.chain_id==update_dict['chain_id'])).\
+                    update({'store_id':update_dict['store_id'],
+                            'store_url':update_dict['web_url']})
             session.commit()
         except Exception as exc:
             pass

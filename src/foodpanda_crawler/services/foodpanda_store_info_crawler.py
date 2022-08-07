@@ -108,12 +108,13 @@ class FoodpandaCrawler():
                     if data['data']['schedules'] != None: 
                         tmp_s = pd.json_normalize(data['data']['schedules'])
                         tmp_s['store_name'] = rows.store_name
-                        col = ['store_name','id','weekday','opening_type','opening_time','closing_time']
+                        tmp_s['store_id'] = rows.store_id
+
+                        col = ['store_name','store_id','weekday','opening_type','opening_time','closing_time']
                         for c in col: 
                             if c not in list(tmp_s.columns): tmp_s[c] = ''
                             tmp_s[c] = tmp_s[c].astype(str)
-                        tmp_s = tmp_s.rename(index=str, columns={'id':'store_id'})
-                        if not tmp_s.empty: self.db_obj.insert_schedule_df(FStoreSchedule, tmp_s)
+                        if not tmp_s.empty: self.db_obj.insert_schedule_df(FStoreSchedule, tmp_s[col])
 
                     # update store tbl
                     update_dict = {
@@ -123,7 +124,9 @@ class FoodpandaCrawler():
                         'address': data['data']['address'],
                         'longitude': data['data']['longitude'],
                         'latitude': data['data']['latitude']}
-                    self.db_obj.update_store_df(FStore, update_dict)                        
+                    self.db_obj.update_store_info(FStore, update_dict)                        
+                    
+                    # if rows.city_name != '台北市': continue
                     time.sleep(2)
                 else: 
                     print('請求失敗', r)
@@ -131,14 +134,15 @@ class FoodpandaCrawler():
 
             except Exception as e:
                 print(rows.store_name, e)
+                if rows.city_name != '台北市': continue
                 time.sleep(2)
 
     def update_chain_store_id(self):
         chain_store = self.db_obj.select_chain_store(FStore)
         for row in chain_store:
             # store menu url
-            url = self.chain_url.format(row['chain_id'])
-            print(row['store_name'], url)
+            url = self.chain_url.format(row.chain_id)
+            print(row.store_name, url)
             try: 
                 # get store menu by api
                 r = requests.get(url=url, headers=self.headers) 
@@ -156,7 +160,7 @@ class FoodpandaCrawler():
                                     'store_url':web_url}
                     self.db_obj.update_store_id(FStore, update_dict)
                     time.sleep(2)
-                    break
+                    # break
                 else: 
                     print('請求失敗', r)
                     raise Exception('請求失敗 ' + str(r))
