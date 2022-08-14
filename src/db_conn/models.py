@@ -2,24 +2,25 @@ from sqlalchemy import ForeignKey, Column, String, DateTime, DECIMAL, Integer, F
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 import datetime
+from sqlalchemy.sql import func
 
 Base = declarative_base()
 
 class FStore(Base):
     __tablename__ = 'foodpanda_store'
-    city_name = Column('city_name', String, primary_key=True)
-    city_url = Column('city_url', String)
+    city_name = Column('city_name', String(16), primary_key=True)
+    city_url = Column('city_url', String(256))
 
-    store_id = Column('store_id', String, primary_key=True)
-    chain_id = Column('chain_id', String, primary_key=True)
+    store_id = Column('store_id', String(16), primary_key=True)
+    chain_id = Column('chain_id', String(16), primary_key=True)
 
-    store_name = Column('store_name', String, primary_key=True)
-    rating = Column('rating', String)
-    store_url = Column('store_url', String, primary_key=True)
+    store_name = Column('store_name', String(256), primary_key=True)
+    rating = Column('rating', String(8))
+    store_url = Column('store_url', String(256), primary_key=True)
     
-    address = Column('address', String)
-    longitude = Column('longitude', String)
-    latitude = Column('latitude', String)
+    address = Column('address', String(1024))
+    longitude = Column('longitude', String(16))
+    latitude = Column('latitude', String(16))
     chk = Column('chk', Boolean)
     record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
     
@@ -38,17 +39,17 @@ class FStore(Base):
 class FStoreMenu(Base):
     __tablename__ = 'foodpanda_store_menu'
 
-    dishes_id = Column('dishes_id', String, primary_key=True)
-    dishes_code = Column('dishes_code', String)
-    menu_url = Column('menu_url', String)
-    dishes_name = Column('dishes_name', String)
-    description = Column('description', String)
-    display_price = Column('display_price', String)
-    master_category_id = Column('master_category_id', String)
-    category = Column('category', String)
-    tags = Column('tags', String)
+    dishes_id = Column('dishes_id', String(16), primary_key=True)
+    dishes_code = Column('dishes_code', String(64))
+    menu_url = Column('menu_url', String(256))
+    dishes_name = Column('dishes_name', String(256))
+    description = Column('description', String(1024))
+    display_price = Column('display_price', String(16))
+    master_category_id = Column('master_category_id', String(8))
+    category = Column('category', String(128))
+    tags = Column('tags', String(128))
     
-    store_id = Column('store_id', String, ForeignKey('foodpanda_store.store_id'))
+    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id'), nullable=False)
     record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
     def __repr__(self):
@@ -59,15 +60,68 @@ class FStoreSchedule(Base):
     __tablename__ = 'foodpanda_store_schedule'
 
     id = Column('id', Integer, primary_key=True, autoincrement=True)
-    store_id = Column('store_id', String, ForeignKey('foodpanda_store.store_id'))
-    store_name = Column('store_name', String)
-    weekday = Column('weekday', String)
-    opening_type = Column('opening_type', String)
-    opening_time = Column('opening_time', String) 
-    closing_time = Column('closing_time', String)
+    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id'))
+    store_name = Column('store_name', String(256))
+    weekday = Column('weekday', String(8))
+    opening_type = Column('opening_type', String(16))
+    opening_time = Column('opening_time', String(16))
+    closing_time = Column('closing_time', String(16))
     record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
 
     
     def __repr__(self):
         pass
-        
+
+class GStore(Base):
+    __tablename__ = 'g_store'
+    store_id = Column('store_id', Integer, primary_key=True, autoincrement=True)
+    name = Column('name', String(256), nullable=True, primary_key=True)
+    services = Column('services', String(16), nullable=True)
+    # 可能會沒有評論
+    avg_rating = Column('avg_rating', Float(precision=1), nullable=True)
+    reviews_count = Column('reviews_count', Integer, nullable=True)
+    reviews_url = Column('reviews_url', String(256), nullable=True)
+    tags = Column('tags', String(128), nullable=True)
+    chk = Column('chk', Boolean, nullable=False)
+    f_store_id = Column('f_store_id', String(16), ForeignKey('foodpanda_store.store_id'), primary_key=True)
+    record_time = Column(DateTime(timezone=True), server_default=func.now())
+
+    # f_store = relationship('FStore', back_populates='g_store')
+    g_store_review = relationship('GStoreReview')
+
+    def __repr__(self):
+        return "Store: {}, Rating: {}, Reviews Count: {}, Getting suc: {}"\
+        .format(self.name, self.avg_rating, self.reviews_count, self.chk)
+
+    @classmethod
+    def find_by_name(cls, session, name):
+        return session.query(cls).filter_by(name=name).all()
+
+
+class GStoreReview(Base):
+    __tablename__ = 'g_store_review'
+
+    # id = Column('id', Integer, primary_key=True, autoincrement=True)
+    review_id = Column('review_id', Integer, primary_key=True)
+    reviewer_id = Column('reviewer_id', String(32), nullable=True, primary_key=True)
+    reviewer_name = Column('reviewer_name', String(32), nullable=True)
+    reviewer_self_count = Column('reviewer_self_count', String(16), nullable=True)
+    reviewer_lang = Column('reviewer_lang', String(16), nullable=True)
+    rating = Column('rating', Float, nullable=True)
+    date_range = Column('date_range', String(16), nullable=True)
+    review_content = Column('review_content', String(8192), nullable=True)
+    dining_mode = Column('dining_mode', String(16), nullable=True)
+    dining_meal_type = Column('dining_meal_type', String(16), nullable=True)
+    pic_url = Column('pic_url', String(256), nullable=True)
+    phone_brand = Column('phone_brand', String(16), nullable=True)
+    pic_date = Column('pic_date', String(16), nullable=True)
+    store_id = Column(String(16), ForeignKey('g_store.store_id'), primary_key=True)
+    record_time = Column(DateTime(timezone=True), server_default=func.now())
+
+    def __repr__(self):
+        return "Reviewer: {}, Comment time: {}, Rating: {}, Content: {}"\
+        .format(self.reviewer_name, self.date_range, self.rating, self.review_content)
+
+    @classmethod
+    def find_by_key_term(cls, session, review_content):
+        return session.query(cls).filter_by(review_content=review_content).all()
