@@ -136,3 +136,5 @@ dmypy.json
 db/dbdata/
 db/dblog/
 *.db
+
+.DS_Store

@@ -14,7 +14,7 @@ services:
     depends_on:
         - db
     volumes:
-        - ./src:/usr/src/app/
+        - ./src:/usr/app/src/
     networks:
       - mynetwork
   db:
