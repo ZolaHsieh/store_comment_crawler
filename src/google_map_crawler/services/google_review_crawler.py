@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from tqdm import tqdm
 from os import path
 
-from .models import GStoreReview
+from src.db_conn.models import GStoreReview
 
 
 logging.basicConfig(

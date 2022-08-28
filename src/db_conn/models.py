@@ -1,7 +1,7 @@
 from sqlalchemy import ForeignKey, Column, String, DateTime, DECIMAL, Integer, Float, Boolean
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
-import datetime
+from datetime import datetime as dt
 from sqlalchemy.sql import func
 
 Base = declarative_base()
@@ -17,15 +17,15 @@ class FStore(Base):
     store_name = Column('store_name', String(256), primary_key=True)
     rating = Column('rating', String(8))
     store_url = Column('store_url', String(256), primary_key=True)
-    
+
     address = Column('address', String(1024))
     longitude = Column('longitude', String(16))
     latitude = Column('latitude', String(16))
     chk = Column('chk', Boolean)
-    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
-    
-    # fmenu = relationship("foodpanda_store_menu")
-    # fschedule = relationship("foodpanda_store_schedule")
+    record_time = Column(DateTime(timezone=True), default=dt.now)
+
+    fmenu = relationship("foodpanda_store_menu")
+    fschedule = relationship("foodpanda_store_schedule")
 
     def __repr__(self):
         return "Foodpanda Store: {}, Rating: {}, City: {}, Getting suc: {}"\
@@ -48,9 +48,14 @@ class FStoreMenu(Base):
     master_category_id = Column('master_category_id', String(8))
     category = Column('category', String(128))
     tags = Column('tags', String(128))
+
+    city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"))
+    store_id = Column('tore_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
+    chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
+    store_name = Column('tore_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
+    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
     
-    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id'), nullable=False)
-    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
+    record_time = Column(DateTime(timezone=True), default=dt.now)
 
     def __repr__(self):
         pass
@@ -59,23 +64,28 @@ class FStoreMenu(Base):
 class FStoreSchedule(Base):
     __tablename__ = 'foodpanda_store_schedule'
 
-    id = Column('id', Integer, primary_key=True, autoincrement=True)
-    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id'))
-    store_name = Column('store_name', String(256))
+    id_ = Column('id', Integer, primary_key=True, autoincrement=True)
     weekday = Column('weekday', String(8))
     opening_type = Column('opening_type', String(16))
     opening_time = Column('opening_time', String(16))
     closing_time = Column('closing_time', String(16))
-    record_time = Column(DateTime(timezone=True), default=datetime.datetime.now)
+    record_time = Column(DateTime(timezone=True), default=dt.now)
+
+    city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"))
+    store_id = Column('tore_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
+    chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
+    store_name = Column('tore_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
+    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
 
     
     def __repr__(self):
         pass
 
 class GStore(Base):
-    __tablename__ = 'g_store'
-    store_id = Column('store_id', Integer, primary_key=True, autoincrement=True)
-    name = Column('name', String(256), nullable=True, primary_key=True)
+    __tablename__ = 'google_store'
+
+    id_ = Column('store_id', Integer, primary_key=True, autoincrement=True)
+    name = Column('name', String(256), nullable=True)
     services = Column('services', String(16), nullable=True)
     # 可能會沒有評論
     avg_rating = Column('avg_rating', Float(precision=1), nullable=True)
@@ -83,10 +93,16 @@ class GStore(Base):
     reviews_url = Column('reviews_url', String(256), nullable=True)
     tags = Column('tags', String(128), nullable=True)
     chk = Column('chk', Boolean, nullable=False)
-    f_store_id = Column('f_store_id', String(16), ForeignKey('foodpanda_store.store_id'), primary_key=True)
     record_time = Column(DateTime(timezone=True), server_default=func.now())
 
-    # f_store = relationship('FStore', back_populates='g_store')
+    city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"))
+    store_id = Column('tore_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
+    chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
+    store_name = Column('tore_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
+    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
+
+
+    f_store = relationship('FStore', back_populates='g_store')
     g_store_review = relationship('GStoreReview')
 
     def __repr__(self):
@@ -99,7 +115,7 @@ class GStore(Base):
 
 
 class GStoreReview(Base):
-    __tablename__ = 'g_store_review'
+    __tablename__ = 'google_store_review'
 
     # id = Column('id', Integer, primary_key=True, autoincrement=True)
     review_id = Column('review_id', Integer, primary_key=True)
@@ -115,7 +131,7 @@ class GStoreReview(Base):
     pic_url = Column('pic_url', String(256), nullable=True)
     phone_brand = Column('phone_brand', String(16), nullable=True)
     pic_date = Column('pic_date', String(16), nullable=True)
-    store_id = Column(String(16), ForeignKey('g_store.store_id'), primary_key=True)
+    g_store_id = Column('g_store_id', String(16), ForeignKey('g_store.id_'), primary_key=True)
     record_time = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):

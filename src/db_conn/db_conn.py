@@ -1,8 +1,7 @@
 from sqlalchemy import create_engine, literal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
-import logging
+# from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
 
 
 class DBObj(object):
@@ -13,7 +12,7 @@ class DBObj(object):
     def _get_db_session(self):
         Session = sessionmaker(bind=self.engine)
         return Session()
-    
+
     def select_all(self, obj_model):
         session = self._get_db_session()
         results = []
@@ -24,7 +23,7 @@ class DBObj(object):
         finally:
             session.close()
         return results
-        
+
     def insert(self, obj_):
         session = self._get_db_session()
         try:
@@ -48,6 +47,17 @@ class StoreReviewsDB(DBObj):
         results = []
         try:
             results = session.query(obj_model).filter(obj_model.store_name.like('%{}%'.format(name))).all()
+        except Exception as exc:
+            pass
+        finally:
+            session.close()
+        return results
+
+    def select_checked_store(self, obj_model):
+        session = self._get_db_session()
+        results = []
+        try:
+            results = session.query(obj_model).filter(obj_model.chk==True).all()
         except Exception as exc:
             pass
         finally:
@@ -173,14 +183,3 @@ class StoreReviewsDB(DBObj):
             pass
         finally:
             session.close()
-
-if __name__ == '__main__':
-    db_conn_info = 'sqlite:///db/foodpanda_store_info1.db'
-    store_reviews_db = StoreReviewsDB(base=Base, info=db_conn_info)
-
-    results = store_reviews_db.select_store(ＦStore, '肉')
-    print(results)
-
-    store_reviews_db.engine_dispose()
-
-    

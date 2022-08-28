@@ -22,8 +22,7 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from .models import GStore
-
+from src.db_conn.models import GStore
 
 logging.basicConfig(
     level=logging.INFO,

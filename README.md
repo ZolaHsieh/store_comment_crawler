@@ -4,8 +4,8 @@
     
 
 ## Getting Started
-    ```
-    python main -m 
+    ```bash
+        python -m src.main --mode gm_crawl
     ```
 
 ## Contribution
