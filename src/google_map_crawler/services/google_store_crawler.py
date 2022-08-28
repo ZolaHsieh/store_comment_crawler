@@ -22,13 +22,9 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+from src import logging_
 from src.db_conn.models import GStore
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s][%(name)s][%(levelname)5s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-)
 
 def process_browser_logs_for_network_request_url(review_api_url, logs):
     for entry in logs:
@@ -36,7 +32,6 @@ def process_browser_logs_for_network_request_url(review_api_url, logs):
         if ('Network.request' in log['method'] and 'request' in log['params']):
             if review_api_url in log['params']['request']['url']:
                 yield log['params']['request']['url']
-                # yield log
 
 
 @dataclass
