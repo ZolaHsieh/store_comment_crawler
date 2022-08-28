@@ -4,9 +4,10 @@
     
 
 ## Getting Started
-    ```bash
-        python -m src.main --mode gm_crawl
-    ```
+```bash
+    python -m src.main --mode gm_crawl
+    python -m src.main --mode fd_crawl
+```
 
 ## Contribution
 
