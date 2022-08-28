@@ -12,12 +12,6 @@ from os import path
 from src.db_conn.models import GStoreReview
 
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='[%(asctime)s][%(name)s][%(levelname)5s] %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S',
-)
-
 @dataclass
 class Review:
     reviewer_id: str = ''
