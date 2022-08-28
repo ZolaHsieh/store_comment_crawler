@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine, literal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
-# from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
+from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
+import logging
 
 
 class DBObj(object):
@@ -12,7 +13,7 @@ class DBObj(object):
     def _get_db_session(self):
         Session = sessionmaker(bind=self.engine)
         return Session()
-
+    
     def select_all(self, obj_model):
         session = self._get_db_session()
         results = []
@@ -23,7 +24,7 @@ class DBObj(object):
         finally:
             session.close()
         return results
-
+        
     def insert(self, obj_):
         session = self._get_db_session()
         try:
@@ -53,17 +54,6 @@ class StoreReviewsDB(DBObj):
             session.close()
         return results
 
-    def select_checked_store(self, obj_model):
-        session = self._get_db_session()
-        results = []
-        try:
-            results = session.query(obj_model).filter(obj_model.chk==True).all()
-        except Exception as exc:
-            pass
-        finally:
-            session.close()
-        return results
-
     def select_store_of_city(self, obj_model, store_list, city_name):
         session = self._get_db_session()
         results = []
@@ -81,7 +71,6 @@ class StoreReviewsDB(DBObj):
         results = []
         try:
             results = session.query(obj_model).filter(obj_model.chk==False, obj_model.store_id!='').all()
-            
         except Exception as exc:
             pass
         finally:
@@ -158,12 +147,15 @@ class StoreReviewsDB(DBObj):
             session.query(obj_model).\
                     filter((obj_model.city_name==update_dict['city_name']),
                             (obj_model.store_name==update_dict['store_name']),
-                            (obj_model.chain_id==update_dict['chain_id'])).\
-                    update({'store_id':update_dict['store_id'],
-                            'store_url':update_dict['web_url']})
+                            (obj_model.store_id==update_dict['store_id'])).\
+                    update({'address':update_dict['address'],
+                            'longitude':update_dict['longitude'],
+                            'latitude':update_dict['latitude'],
+                            'chk':True
+                            })
             session.commit()
         except Exception as exc:
-            pass
+            print(str(exc))
         finally:
             session.close()
 
@@ -181,3 +173,14 @@ class StoreReviewsDB(DBObj):
             pass
         finally:
             session.close()
+
+if __name__ == '__main__':
+    db_conn_info = 'sqlite:///db/foodpanda_store_info1.db'
+    store_reviews_db = StoreReviewsDB(base=Base, info=db_conn_info)
+
+    results = store_reviews_db.select_store(ＦStore, '肉')
+    print(results)
+
+    store_reviews_db.engine_dispose()
+
+    

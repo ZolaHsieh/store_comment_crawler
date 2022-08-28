@@ -17,4 +17,4 @@
 
 <!-- [MIT](https://opensource.org/licenses/MIT) -->
 
-Copyright (c) 2022-present, Zola and Jay 
+Copyright (c) 2022-present, Zola and Jay
