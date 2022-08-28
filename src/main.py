@@ -1,9 +1,11 @@
 import argparse
 from src import logging_
 from src.google_map_crawler.main import crawler as gm_crawl
+from src.foodpanda_crawler.run_foodpandas_crawler import run_fd_crawler
 
 mode_type = {
-    'gm_crawl' : gm_crawl
+    'gm_crawl' : gm_crawl,
+    'fd_crawl' : run_fd_crawler
 }
 logger = logging_.getLogger(__name__)
 

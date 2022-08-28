@@ -2,9 +2,11 @@ import bs4
 import pandas as pd
 import requests
 import time
-
+from src import logging_
 from tqdm import tqdm
 from src.db_conn.models import FStore, FStoreMenu, FStoreSchedule
+
+logger = logging_.getLogger(__name__)
 
 class FoodpandaCrawler():
     def __init__(self, db_obj):
@@ -25,8 +27,10 @@ class FoodpandaCrawler():
                             'opening_type': 'delivery'}
 
     def get_all_city_url(self):
-        # logger.info('get_all_city_url start')
-
+        logger.info('get_all_city_url start')
+        
+        all_city_link = []
+        all_city_title = []
         result = requests.get(self.main_page_url, headers = self.headers)
         print('main page resuest: ',result)
         if result.status_code==200:
@@ -34,58 +38,58 @@ class FoodpandaCrawler():
             
             # get all city url
             tmp = web_content.find_all("a",class_="city-tile")	
-            self.all_city_link = [self.main_page_url + a.get("href") for a in tmp]
+            all_city_link = [self.main_page_url + a.get("href") for a in tmp]
 
             # get all city title
             tmp = web_content.find_all("span" ,class_="city-name")							
-            self.all_city_title = [(c.text).strip() for c in tmp]								
-            # print(all_city_title)	
+            all_city_title = [(c.text).strip() for c in tmp]
 
-            return self.all_city_link, self.all_city_title
-        else: 
-            print('query error!')
-            return [],[]
+        else: print('query error!')
+
+        logger.info('get_all_city_url end')
+        return all_city_link, all_city_title
 
     def get_all_stores_of_city(self, city_name, city_url):
         try:
-            print(city_name, city_url)
+            logger.info(f'get_all_stores_of_city start: {city_name}')
+            
             result = requests.get(city_url, headers=self.headers)
-            print(result)
-
+            if result.status_code!=200: raise Exception(f'return staus != 200, {city_name}')
+            
             web_content = bs4.BeautifulSoup(result.content , "html.parser")	
             vendor_list_li = web_content.find_all('ul', class_='vendor-list')[0]
             
             # store_name_list
             tmp = vendor_list_li.find_all("span", class_="name fn")
             store_list = [(c.text).strip() for c in tmp]
-            print('store_list:', len(store_list))
+            logger.info('store_list length:'+str(len(store_list)))
             
             # store rating
             tmp = vendor_list_li.find_all("span", class_="rating")
             rating = [(c.text.split('/')[0]).strip() for c in tmp]
-            print('rating:', len(rating))
+            logger.info('rating list length:'+str(len(rating)))
 
             # get store menu url
             tmp = vendor_list_li.find_all("a", class_="hreview-aggregate url")
             store_url = [(b.get('href')) for b in tmp]
-            print('store_url:', len(store_url))
+            logger.info('store_url list length:'+str(len(store_url)))
 
             # store_data_processed
-            store_data = self.__sotre_data_processed(store_list,rating, store_url, city_name, city_url)
+            store_data = self._sotre_data_processed(store_list,rating, store_url, city_name, city_url)
           
             # insert store list
             if not store_data.empty: self.db_obj.insert_store_df(FStore, store_data)
+            logger.info('get_all_stores_of_city end')
             time.sleep(2)
 
         except Exception as e:
-            print(e)
+            logger.info('get_all_stores_of_city error: ' + str(e))
 
     def get_menu(self):
+        logger.info('get_menu start.')
         store_data = self.db_obj.select_uncheck_store(FStore)
         for rows in store_data:
-            # print(rows)
             if rows.store_id=='': continue
-
             url = self.menu_api.format(rows.store_id)
             try:
                 # get store menu by api
@@ -99,9 +103,13 @@ class FoodpandaCrawler():
                     ## insert menus
                     if data['data']['menus'] != None: 
                         menu_list=pd.DataFrame()
-                        menu_list = self.__menu_data_processed(data['data']['menus'][0])
+                        menu_list = self._menu_data_processed(data['data']['menus'][0])
                         menu_list['menu_url'] = url
+                        menu_list['city_name'] = rows.city_name
                         menu_list['store_id'] = rows.store_id
+                        menu_list['chain_id'] = rows.chain_id
+                        menu_list['store_name'] = rows.store_name
+                        menu_list['store_url'] = rows.store_url
                         if not menu_list.empty: self.db_obj.insert_menu_df(FStoreMenu, menu_list)
 
                     # insert schedules
@@ -109,8 +117,10 @@ class FoodpandaCrawler():
                         tmp_s = pd.json_normalize(data['data']['schedules'])
                         tmp_s['store_name'] = rows.store_name
                         tmp_s['store_id'] = rows.store_id
-
-                        col = ['store_name','store_id','weekday','opening_type','opening_time','closing_time']
+                        tmp_s['city_name'] = rows.city_name
+                        tmp_s['chain_id'] = rows.chain_id
+                        tmp_s['store_url'] = rows.store_url
+                        col = ['store_name','store_id','city_name','chain_id','store_url','weekday','opening_type','opening_time','closing_time']
                         for c in col: 
                             if c not in list(tmp_s.columns): tmp_s[c] = ''
                             tmp_s[c] = tmp_s[c].astype(str)
@@ -125,19 +135,17 @@ class FoodpandaCrawler():
                         'longitude': data['data']['longitude'],
                         'latitude': data['data']['latitude']}
                     self.db_obj.update_store_info(FStore, update_dict)                        
-                    
-                    # if rows.city_name != '台北市': continue
                     time.sleep(2)
-                else: 
-                    print('請求失敗', r)
-                    raise Exception('請求失敗 ' + str(r))
+                else: raise Exception('請求失敗 ' + str(r))
 
             except Exception as e:
-                print(rows.store_name, e)
-                if rows.city_name != '台北市': continue
+                logger.info(f'get_menu error:[{rows.store_name}] ' + str(e))
                 time.sleep(2)
+                continue
+        logger.info('get_menu end.')
 
     def update_chain_store_id(self):
+        logger.info('update_chain_store_id start.')
         chain_store = self.db_obj.select_chain_store(FStore)
         for row in chain_store:
             # store menu url
@@ -160,18 +168,16 @@ class FoodpandaCrawler():
                                     'store_url':web_url}
                     self.db_obj.update_store_id(FStore, update_dict)
                     time.sleep(2)
-                    # break
-                else: 
-                    print('請求失敗', r)
-                    raise Exception('請求失敗 ' + str(r))
-
+                    
+                else: raise Exception('請求失敗 ' + str(r))
+                logger.info('update_chain_store_id end.')
             except Exception as e:
-                print(row['store'], e)
+                logger.info(f'update_chain_store_id error:[{row.store}] '+str(e))
                 time.sleep(2)
-                # break
                 continue
-
-    def __sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
+        logger.info('update_chain_store_id end.')
+    
+    def _sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
         
         processed_data = pd.DataFrame()
         # data processed
@@ -200,7 +206,7 @@ class FoodpandaCrawler():
         print('processed data shape:',processed_data.shape)
         return processed_data
 
-    def __menu_data_processed(self, data):
+    def _menu_data_processed(self, data):
         menu_list = pd.DataFrame()
         for item in data['menu_categories']: 
             if item['name']=='※注意事項': continue

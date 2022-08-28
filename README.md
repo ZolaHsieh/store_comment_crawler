@@ -4,9 +4,10 @@
     
 
 ## Getting Started
-    ```bash
-        python -m src.main --mode gm_crawl
-    ```
+```bash
+    python -m src.main --mode gm_crawl
+    python -m src.main --mode fd_crawl
+```
 
 ## Contribution
 
@@ -17,4 +18,4 @@
 
 <!-- [MIT](https://opensource.org/licenses/MIT) -->
 
-Copyright (c) 2022-present, Zola and Jay 
+Copyright (c) 2022-present, Zola and Jay
