@@ -78,28 +78,25 @@ COMMIT;
 
 -- create google_store table
 CREATE TABLE `google_store` (
-  `id_` int(11) NOT NULL,
   `name` varchar(256) NOT NULL,
-  `services` varchar(16) DEFAULT NULL,
+  `services` varchar(64) DEFAULT NULL,
   `avg_rating` float DEFAULT NULL,
   `reviews_count` int(11) DEFAULT NULL,
   `reviews_url` varchar(256) DEFAULT NULL,
   `tags` varchar(128) DEFAULT NULL,
   `chk` tinyint(1) NOT NULL,
+
   `city_name` varchar(16) DEFAULT NULL,
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
   `store_url` varchar(256) DEFAULT NULL,
+
   `record_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `google_store`
-  ADD PRIMARY KEY (`id_`),
-  ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`);;
-
-ALTER TABLE `google_store`
-  MODIFY `id_` int(11) NOT NULL AUTO_INCREMENT;
+  ADD PRIMARY KEY `store` (`name`,`city_name`,`store_id`,`chain_id`);;
 
 ALTER TABLE `google_store`
   ADD CONSTRAINT `google_store_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
@@ -121,13 +118,19 @@ CREATE TABLE `google_store_review` (
   `pic_url` varchar(256) DEFAULT NULL,
   `phone_brand` varchar(16) DEFAULT NULL,
   `pic_date` varchar(16) DEFAULT NULL,
-  `g_store_id` int(11) DEFAULT NULL,
+
+  `city_name` varchar(16) DEFAULT NULL,
+  `store_id` varchar(16) DEFAULT NULL,
+  `chain_id` varchar(16) DEFAULT NULL,
+  `store_name` varchar(256) DEFAULT NULL,
+  `store_url` varchar(256) DEFAULT NULL,
+
   `record_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `google_store_review`
-  ADD PRIMARY KEY (`review_id`,`reviewer_id`);
+  ADD PRIMARY KEY (`review_id`,`reviewer_id`, `city_name`,`store_id`,`chain_id`);
 
 ALTER TABLE `google_store_review`
-  ADD CONSTRAINT `google_store_review_ibfk_1` FOREIGN KEY (`g_store_id`) REFERENCES `google_store` (`id_`);
+  ADD CONSTRAINT `google_store_review_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `google_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
 COMMIT;

@@ -84,8 +84,7 @@ class FStoreSchedule(Base):
 class GStore(Base):
     __tablename__ = 'google_store'
 
-    id_ = Column('id_', Integer, primary_key=True, autoincrement=True)
-    name = Column('name', String(256), nullable=True)
+    name = Column('name', String(256), primary_key=True, nullable=True)
     services = Column('services', String(16), nullable=True)
     # 可能會沒有評論
     avg_rating = Column('avg_rating', Float(precision=1), nullable=True)
@@ -93,14 +92,14 @@ class GStore(Base):
     reviews_url = Column('reviews_url', String(256), nullable=True)
     tags = Column('tags', String(128), nullable=True)
     chk = Column('chk', Boolean, nullable=False)
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
 
-    city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"))
-    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
-    chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
+    city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"), primary_key=True,)
+    store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"), primary_key=True)
+    chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"), primary_key=True)
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
     store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
 
+    record_time = Column(DateTime(timezone=True), server_default=func.now())
 
     # f_store = relationship('FStore', back_populates='g_store')
     # g_store_review = relationship('GStoreReview')
@@ -117,7 +116,6 @@ class GStore(Base):
 class GStoreReview(Base):
     __tablename__ = 'google_store_review'
 
-    # id = Column('id', Integer, primary_key=True, autoincrement=True)
     review_id = Column('review_id', Integer, primary_key=True)
     reviewer_id = Column('reviewer_id', String(32), nullable=True, primary_key=True)
     reviewer_name = Column('reviewer_name', String(32), nullable=True)
@@ -131,7 +129,13 @@ class GStoreReview(Base):
     pic_url = Column('pic_url', String(256), nullable=True)
     phone_brand = Column('phone_brand', String(16), nullable=True)
     pic_date = Column('pic_date', String(16), nullable=True)
-    g_store_id = Column('g_store_id', String(16), ForeignKey('g_store.id_'), primary_key=True)
+    
+    city_name = Column('city_name', String(16), ForeignKey('google_store.city_name', ondelete="CASCADE"), primary_key=True)
+    store_id = Column('store_id', String(16), ForeignKey('google_store.store_id', ondelete="CASCADE"), primary_key=True)
+    chain_id = Column('chain_id', String(16), ForeignKey('google_store.chain_id', ondelete="CASCADE"), primary_key=True)
+    store_name = Column('store_name', String(256), ForeignKey('google_store.store_name', ondelete="CASCADE"))
+    store_url = Column('store_url', String(256), ForeignKey('google_store.store_url', ondelete="CASCADE"))
+    
     record_time = Column(DateTime(timezone=True), server_default=func.now())
 
     def __repr__(self):

@@ -8,6 +8,7 @@ import sys
 # from pprint import pprint
 from os import path
 from dataclasses import dataclass
+from typing import Tuple
 from selenium import webdriver
 # from seleniumwire import webdriver
 # from webdriver_manager.chrome import ChromeDriverManager
@@ -46,9 +47,12 @@ class GoogleStoreInfo:
     
 
 class GoogleStoreCrawler:
-    def __init__(self, driver_path='./src/driver/chromedriver', delay=5, logger=logging.Logger):
+    def __init__(self, driver_path='./src/driver/chromedriver_linux', delay=10, logger=logging.Logger):
         chrome_options = Options()
-        # chrome_options.add_argument("--disable-notifications")
+        chrome_options.add_argument('--headless')
+        chrome_options.add_argument('--no-sandbox')
+        chrome_options.add_argument('--disable-dev-shm-usage')
+
         chrome_service=Service(driver_path)
         capabilities = DesiredCapabilities.CHROME
         capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
@@ -72,16 +76,17 @@ class GoogleStoreCrawler:
         elements = [False]
         try:
             WebDriverWait(self.chrome_driver, self.delay).until(EC.presence_of_all_elements_located((by, text)))
-            WebDriverWait(self.chrome_driver, self.delay).until(EC.visibility_of_all_elements_located((by, text)))
+            # WebDriverWait(self.chrome_driver, self.delay).until(EC.visibility_of_all_elements_located((by, text)))
             elements = self.chrome_driver.find_elements(by, text)
         except TimeoutException:
             self.logger.error('wait_for_element_ready TimeoutException')
         return elements
 
 
-    def run(self, search_context, f_store_id) -> GStore:
+    def run(self, search_context, f_store) -> Tuple[GStore, bool]:
         store_info  = GoogleStoreInfo()
-        suc_bool = 'N'
+        suc_bool = False
+        g_store = GStore()
         try:
             # 開啟chrome with google maps web page
             self.chrome_driver.implicitly_wait(self.delay)
@@ -110,10 +115,11 @@ class GoogleStoreCrawler:
             # avg_rating
             g_avg_rating = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span/span/span[1]')[0]
             store_info.avg_rating = float(g_avg_rating.text)
+            
             self.logger.info('Getting store average rating - {}'.format(store_info.avg_rating))
 
             # 類型
-            g_category = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span/span/span[1]')[0]
+            g_category = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="fontBodyMedium"]/span/span/button')[0]
             store_info.category = g_category.text
             self.logger.info('Getting store category - {}'.format(store_info.category))
 
@@ -127,7 +133,7 @@ class GoogleStoreCrawler:
             # 地址
 
             # 按下更多評論
-            more_reviews_button = self._wait_for_elements_ready_and_find(By.XPATH, '//span[@class="F7nice mmu3tf"]/*/button[@class="DkEaL"]')[0]
+            more_reviews_button = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span[2]/span/button[@class="DkEaL"]')[0]
             reviews_count_str = re.findall(r'\d+', more_reviews_button.get_attribute('aria-label'), re.I)
             reviews_count = int(''.join(str(str_) for str_ in reviews_count_str))
             more_reviews_button.click()
@@ -155,9 +161,24 @@ class GoogleStoreCrawler:
             for url in urls: store_info.reviews_url = url
             self.logger.info('Get review request api: {}'.format(store_info.reviews_url))
 
-            if (not store_info.reviews_url) or (not store_info.tags) or (not store_info.reviews_url): 
+            if not store_info.name:
                 raise Exception('Reviews Url Null !!')
-            suc_bool = 'Y'
+
+            if (store_info.reviews_url) and (store_info.tags): 
+                suc_bool = True
+
+            g_store = GStore(name=store_info.name,
+                            services=store_info.services,
+                            avg_rating=store_info.avg_rating,
+                            reviews_count=store_info.reviews_count,
+                            reviews_url=store_info.reviews_url,
+                            tags=store_info.tags,
+                            chk=suc_bool,
+                            city_name=f_store.city_name,
+                            store_id=f_store.store_id,
+                            chain_id=f_store.chain_id,
+                            store_name=f_store.store_name,
+                            store_url=f_store.store_url)
 
         except NoSuchElementException as exc:
             self.logger.error('NoSuchElementException: {}'.format(str(exc)))
@@ -166,18 +187,10 @@ class GoogleStoreCrawler:
             fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             self.logger.error('Other Exception: {}, {}, {}'.format(exc_type, fname, exc_tb.tb_lineno))
         finally:
-            g_store = GStore(name=store_info.name,
-                            avg_rating=store_info.avg_rating,
-                            services=store_info.services,
-                            reviews_count=store_info.reviews_count,
-                            reviews_url=store_info.reviews_url,
-                            tags=store_info.tags,
-                            chk=suc_bool,
-                            f_store_id=f_store_id)
             self._close_session()
             self.logger.info('Closing google driver session.')
         
-        return g_store
+        return g_store, suc_bool
         
 
 if __name__ == '__main__':
@@ -193,7 +206,7 @@ if __name__ == '__main__':
     logger = logging.getLogger(__name__)
     logger.info('Start job.')
     g_review_crawler = GoogleStoreCrawler(delay=10, logger=logger)
-    g_store = g_review_crawler.run(search_context=search_context, f_store_id='0000')
+    g_store = g_review_crawler.run(search_context=search_context, f_store='')
 
     print(g_store)
     logger.info('End job.')

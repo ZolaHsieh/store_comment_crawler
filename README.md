@@ -4,6 +4,13 @@
     
 
 ## Getting Started
+- Run docker environment
+```bash
+    docker-compose up -d
+    docker exec -it python bash
+```
+
+- Run job
 ```bash
     python -m src.main --mode gm_crawl
     python -m src.main --mode fd_crawl
