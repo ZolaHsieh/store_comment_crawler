@@ -31,6 +31,7 @@ class DBObj(object):
             session.add_all(obj_)
             session.commit()
         except Exception as exc:
+            print(exc)
             session.rollback()
         finally:
             session.close()
@@ -61,6 +62,31 @@ class StoreReviewsDB(DBObj):
             results = session.query(obj_model).filter(obj_model.store_name.in_(store_list), obj_model.city_name==city_name).all()
         except Exception as e:
             print(e)
+            pass
+        finally:
+            session.close()
+        return results
+    
+    def select_crawl_g_store(self, f_store, g_store):
+        session = self._get_db_session()
+        results = []
+        try:
+            results = session.query(g_store, 
+                            ).join(f_store
+                            ).filter(g_store.chk==True).all()
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+        return results
+
+    def select_check_store(self, obj_model):
+        session = self._get_db_session()
+        results = []
+        try:
+            results = session.query(obj_model).filter(obj_model.chk==True, obj_model.store_id!='').all()
+        except Exception as exc:
             pass
         finally:
             session.close()

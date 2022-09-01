@@ -29,10 +29,10 @@ class Review:
 
 
 class GoogleReviewCrawler:
-    def __init__(self, store_id, reviews_url='', reviews_count=0, delay=0, logger=logging.Logger):
-        self.store_id = store_id
-        self.reviews_url = reviews_url
-        self.reviews_api = reviews_url.split('?')[0]
+    def __init__(self, g_store, delay=0, logger=logging.Logger):
+        self.g_store = g_store
+        self.reviews_url = self.g_store.reviews_url
+        self.reviews_api = self.reviews_url.split('?')[0]
         self.params = [key_idx.split('=') for key_idx in reviews_url.split('?')[-1].split('&')]
         self.params = {key: idx for key, idx in self.params}
         self.headers = {
@@ -51,7 +51,7 @@ class GoogleReviewCrawler:
                     'x-goog-ext-353267353-bin': 'IM+ACQ=='
                 }
         self.r_key = '!1i'
-        self.reviews_count=reviews_count
+        self.reviews_count=self.g_store.reviews_count
         self.delay=delay
         self.logger=logger
 
@@ -112,7 +112,11 @@ class GoogleReviewCrawler:
                         pic_url=review_obj.pic_url,
                         phone_brand=review_obj.phone_brand,
                         pic_date=review_obj.pic_date,
-                        g_store_id=self.store_id
+                        city_name=self.g_store.city_name,
+                        store_id=self.g_store.store_id,
+                        chain_id=self.g_store.chain_id,
+                        store_name=self.g_store.store_name,
+                        store_url=self.g_store.store_url,
                     ))
                     review_count+=1
                     # print(review_obj)

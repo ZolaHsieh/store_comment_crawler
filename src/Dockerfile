@@ -1,4 +1,4 @@
-FROM python:3.9.7
+FROM joyzoursky/python-chromedriver:3.9-selenium
 
 WORKDIR /usr/app
 
