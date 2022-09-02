@@ -5,7 +5,6 @@ import re
 import json
 import sys
 # from retry import retry
-# from pprint import pprint
 from os import path
 from dataclasses import dataclass
 from typing import Tuple
@@ -57,7 +56,7 @@ class GoogleStoreCrawler:
         capabilities = DesiredCapabilities.CHROME
         capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
         self.chrome_driver = webdriver.Chrome(
-            service=chrome_service, 
+            service=chrome_service,
             options=chrome_options,
             desired_capabilities=capabilities
         )
@@ -75,7 +74,7 @@ class GoogleStoreCrawler:
         # elements = [webdriver.remote.webelement.WebElement]
         elements = [False]
         try:
-            WebDriverWait(self.chrome_driver, self.delay).until(EC.presence_of_all_elements_located((by, text)))
+            WebDriverWait(self.chrome_driver, self.delay, 1).until(EC.presence_of_all_elements_located((by, text)))
             # WebDriverWait(self.chrome_driver, self.delay).until(EC.visibility_of_all_elements_located((by, text)))
             elements = self.chrome_driver.find_elements(by, text)
         except TimeoutException:
@@ -125,12 +124,19 @@ class GoogleStoreCrawler:
 
             # 內用/外帶/外送
             g_services = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="E0DTEd"]/div')
-            store_info.services = ','.join([service.get_attribute('aria-label') for service in g_services])
-            self.logger.info('Getting store service type - {}'.format(store_info.services))
+            if g_services[0]:
+                store_info.services = ','.join([service.get_attribute('aria-label') for service in g_services])
+                self.logger.info('Getting store service type - {}'.format(store_info.services))
 
             # 電話
 
             # 地址
+
+            # 取得店家tag
+            reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
+                                                                '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
+            store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
+            self.logger.info('Get review tags: {}'.format(store_info.tags))
 
             # 按下更多評論
             more_reviews_button = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span[2]/span/button[@class="DkEaL"]')[0]
@@ -139,12 +145,6 @@ class GoogleStoreCrawler:
             more_reviews_button.click()
             store_info.reviews_count = reviews_count
             self.logger.info('Click more reviews. Count: {}'.format(store_info.reviews_count))
-            
-            # 取得店家tag  
-            reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
-                                                                '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
-            store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
-            self.logger.info('Get review tags: {}'.format(store_info.tags))
 
             # 評論scroll到最下方最後一則評論
             scrollable_pane = self.chrome_driver.find_element(By.CSS_SELECTOR, 'div.m6QErb.DxyBCb.kA9KIf.dS8AEf')
@@ -155,10 +155,7 @@ class GoogleStoreCrawler:
             # 取得評論 requests (1筆)
             logs = self.chrome_driver.get_log('performance')
             urls = process_browser_logs_for_network_request_url('{}{}'.format(self.chrome_map_url, self.review_api_url),logs)
-            # with open('logs', 'wt') as out:
-            #     for url in urls:
-            #         pprint(url, stream=out)
-            for url in urls: store_info.reviews_url = url
+            store_info.reviews_url = min(urls, key=len)
             self.logger.info('Get review request api: {}'.format(store_info.reviews_url))
 
             if not store_info.name:
@@ -208,5 +205,5 @@ if __name__ == '__main__':
     g_review_crawler = GoogleStoreCrawler(delay=10, logger=logger)
     g_store = g_review_crawler.run(search_context=search_context, f_store='')
 
-    print(g_store)
+    # print(g_store)
     logger.info('End job.')

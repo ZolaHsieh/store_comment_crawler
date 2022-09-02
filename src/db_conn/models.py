@@ -92,17 +92,14 @@ class GStore(Base):
     reviews_url = Column('reviews_url', String(256), nullable=True)
     tags = Column('tags', String(128), nullable=True)
     chk = Column('chk', Boolean, nullable=False)
+    record_time = Column(DateTime(timezone=True), server_default=func.now())
 
     city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"), primary_key=True,)
     store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"), primary_key=True)
     chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"), primary_key=True)
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
     store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
-
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
-
-    # f_store = relationship('FStore', back_populates='g_store')
-    # g_store_review = relationship('GStoreReview')
+    # google_store_review = relationship('GStoreReview', back_populates="google_store")
 
     def __repr__(self):
         return "Store: {}, Rating: {}, Reviews Count: {}, Getting suc: {}"\
@@ -116,9 +113,9 @@ class GStore(Base):
 class GStoreReview(Base):
     __tablename__ = 'google_store_review'
 
-    review_id = Column('review_id', Integer, primary_key=True)
-    reviewer_id = Column('reviewer_id', String(32), nullable=True, primary_key=True)
-    reviewer_name = Column('reviewer_name', String(32), nullable=True)
+    review_id = Column('review_id', String(96), primary_key=True)
+    reviewer_id = Column('reviewer_id', String(32), nullable=True)
+    reviewer_name = Column('reviewer_name', String(64), nullable=True)
     reviewer_self_count = Column('reviewer_self_count', String(16), nullable=True)
     reviewer_lang = Column('reviewer_lang', String(16), nullable=True)
     rating = Column('rating', Float, nullable=True)
@@ -126,21 +123,26 @@ class GStoreReview(Base):
     review_content = Column('review_content', String(8192), nullable=True)
     dining_mode = Column('dining_mode', String(16), nullable=True)
     dining_meal_type = Column('dining_meal_type', String(16), nullable=True)
-    pic_url = Column('pic_url', String(256), nullable=True)
-    phone_brand = Column('phone_brand', String(16), nullable=True)
+    pic_url = Column('pic_url', String(4092), nullable=True)
+    phone_brand = Column('phone_brand', String(64), nullable=True)
     pic_date = Column('pic_date', String(16), nullable=True)
-    
-    city_name = Column('city_name', String(16), ForeignKey('google_store.city_name', ondelete="CASCADE"), primary_key=True)
-    store_id = Column('store_id', String(16), ForeignKey('google_store.store_id', ondelete="CASCADE"), primary_key=True)
-    chain_id = Column('chain_id', String(16), ForeignKey('google_store.chain_id', ondelete="CASCADE"), primary_key=True)
+    record_time = Column(DateTime(timezone=True), server_default=func.now())
+
+    city_name = Column('city_name', String(16), ForeignKey('google_store.city_name', ondelete="CASCADE"))
+    store_id = Column('store_id', String(16), ForeignKey('google_store.store_id', ondelete="CASCADE"))
+    chain_id = Column('chain_id', String(16), ForeignKey('google_store.chain_id', ondelete="CASCADE"))
     store_name = Column('store_name', String(256), ForeignKey('google_store.store_name', ondelete="CASCADE"))
     store_url = Column('store_url', String(256), ForeignKey('google_store.store_url', ondelete="CASCADE"))
     
-    record_time = Column(DateTime(timezone=True), server_default=func.now())
+    # google_store_city_name = relationship('GStore', back_populates="google_store_review", foreign_keys=city_name)
+    # google_store_store_id = relationship('GStore', back_populates="google_store_review", foreign_keys=store_id)
+    # google_store_chain_id = relationship('GStore', back_populates="google_store_review", foreign_keys=chain_id)
+    # google_store_store_name = relationship('GStore', back_populates="google_store_review", foreign_keys=store_name)
+    # google_store_store_url = relationship('GStore', back_populates="google_store_review", foreign_keys=store_url)
 
     def __repr__(self):
-        return "Reviewer: {}, Comment time: {}, Rating: {}, Content: {}"\
-        .format(self.reviewer_name, self.date_range, self.rating, self.review_content)
+        return "Reviewer: {}, Comment time: {}, Rating: {}"\
+        .format(self.reviewer_name, self.date_range, self.rating)
 
     @classmethod
     def find_by_key_term(cls, session, review_content):

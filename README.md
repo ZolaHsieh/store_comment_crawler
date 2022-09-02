@@ -12,8 +12,8 @@
 
 - Run job
 ```bash
-    python -m src.main --mode gm_crawl
-    python -m src.main --mode fd_crawl
+    python -m src.main --mode gm_crawl  --db_type mariadb
+    python -m src.main --mode fd_crawl  --db_type mariadb
 ```
 
 ## Contribution
@@ -24,5 +24,9 @@
 ## License
 
 <!-- [MIT](https://opensource.org/licenses/MIT) -->
+
+
+## Issue Tracking
+- Google 店家評論順序可能會調整
 
 Copyright (c) 2022-present, Zola and Jay
