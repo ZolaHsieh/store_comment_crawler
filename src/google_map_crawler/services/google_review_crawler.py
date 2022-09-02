@@ -33,7 +33,7 @@ class GoogleReviewCrawler:
         self.g_store = g_store
         self.reviews_url = self.g_store.reviews_url
         self.reviews_api = self.reviews_url.split('?')[0]
-        self.params = [key_idx.split('=') for key_idx in reviews_url.split('?')[-1].split('&')]
+        self.params = [key_idx.split('=') for key_idx in self.reviews_url.split('?')[-1].split('&')]
         self.params = {key: idx for key, idx in self.params}
         self.headers = {
                     'Referer': 'https://www.google.com.tw/',
@@ -59,17 +59,16 @@ class GoogleReviewCrawler:
         store_reviews = []
         try:
             review_count = 1
-            for idx in range(0, self.reviews_count, 10):
-                self.params['pb'] = re.sub(r'{}[0-9]+!'.format(self.r_key), '{}{}!'.format(self.r_key, idx), self.params['pb'])
-                # print(params)
-                response = requests.get(self.reviews_api, params=self.params, headers=self.headers)
+            for idx in range(0, self.reviews_count, 20):
+                self.params['pb'] = re.sub(r'\d+!\d+i\d+!', '2{}{}!'.format(self.r_key, idx), self.params['pb'])
+                params_str = '&'.join([f'{key}={value}' for key, value in self.params.items()])
+                response = requests.get(f'{self.reviews_api}?{params_str}', headers=self.headers)
                 if response.status_code != 200:
-                    raise
+                    raise Exception('Failed to get reviews')
                     # self.logger.error('response.status_code: {} ...'.format(str(response.status_code)))
                     # self.logger.info('Searching.')
                 resp_str = response.content.decode().replace(')]}\'', '')
                 reviews = json.loads(resp_str)[2]
-
                 if reviews is None: break
                 for review in reviews:
                     review_obj = Review()
@@ -99,7 +98,7 @@ class GoogleReviewCrawler:
                             review_obj.pic_date = ','.join([str(d) for d in pics[21][6][7][0:3]])
 
                     store_reviews.append(GStoreReview(
-                        review_id=review_count,
+                        review_id=f'{self.g_store.city_name}-{self.g_store.store_id}-{self.g_store.chain_id}-{review_obj.reviewer_id}-{review_count}',
                         reviewer_id=review_obj.reviewer_id,
                         reviewer_name=review_obj.reviewer_name,
                         reviewer_self_count=review_obj.reviewer_self_count,
@@ -119,7 +118,6 @@ class GoogleReviewCrawler:
                         store_url=self.g_store.store_url,
                     ))
                     review_count+=1
-                    # print(review_obj)
                 time.sleep(self.delay)
         except Exception as exc:
             exc_type, exc_obj, exc_tb = sys.exc_info()

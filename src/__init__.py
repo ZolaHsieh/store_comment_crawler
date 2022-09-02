@@ -1,16 +1,7 @@
-import os
-from src.common.setup_logger import setup
-from src.db_conn.db_conn import StoreReviewsDB
-from src.db_conn.models import Base
+from src.common import setup_logger, setup_db, get_args
 
 
-_user = os.getenv('MYSQL_USER')
-_password = os.getenv('MYSQL_PASSWORD')
-_host = 'db'
-_port = 3306
-_database=os.getenv('MYSQL_DATABASE')
+args = get_args.get_()
+logging_ = setup_logger.setup()
+store_reviews_db = setup_db.setup(args.db_type)
 
-logging_ = setup()
-# db_conn_info = 'sqlite:///./db/foodpanda_store_info.db?charset=utf8'
-db_conn_info = f'mysql+pymysql://{_user}:{_password}@{_host}:{_port}/{_database}?charset=utf8'
-store_reviews_db = StoreReviewsDB(base=Base, info=db_conn_info)

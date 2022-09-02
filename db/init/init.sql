@@ -105,9 +105,9 @@ COMMIT;
 
 -- create google_store_review table
 CREATE TABLE `google_store_review` (
-  `review_id` int(11) NOT NULL,
+  `review_id` varchar(96) NOT NULL,
   `reviewer_id` varchar(32) NOT NULL,
-  `reviewer_name` varchar(32) DEFAULT NULL,
+  `reviewer_name` varchar(64) DEFAULT NULL,
   `reviewer_self_count` varchar(16) DEFAULT NULL,
   `reviewer_lang` varchar(16) DEFAULT NULL,
   `rating` float DEFAULT NULL,
@@ -115,8 +115,8 @@ CREATE TABLE `google_store_review` (
   `review_content` varchar(8192) DEFAULT NULL,
   `dining_mode` varchar(16) DEFAULT NULL,
   `dining_meal_type` varchar(16) DEFAULT NULL,
-  `pic_url` varchar(256) DEFAULT NULL,
-  `phone_brand` varchar(16) DEFAULT NULL,
+  `pic_url` varchar(4092) DEFAULT NULL,
+  `phone_brand` varchar(64) DEFAULT NULL,
   `pic_date` varchar(16) DEFAULT NULL,
 
   `city_name` varchar(16) DEFAULT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE `google_store_review` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `google_store_review`
-  ADD PRIMARY KEY (`review_id`,`reviewer_id`, `city_name`,`store_id`,`chain_id`);
+  ADD PRIMARY KEY (`review_id`);
 
 ALTER TABLE `google_store_review`
   ADD CONSTRAINT `google_store_review_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `google_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);

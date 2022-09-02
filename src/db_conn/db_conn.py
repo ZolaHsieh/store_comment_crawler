@@ -1,8 +1,10 @@
+from unittest import result
 from sqlalchemy import create_engine, literal
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import exists
 from src.db_conn.models import Base, FStore, FStoreMenu, FStoreSchedule
 import logging
+from sqlalchemy import insert, tuple_
 
 
 class DBObj(object):
@@ -24,7 +26,7 @@ class DBObj(object):
         finally:
             session.close()
         return results
-        
+
     def insert(self, obj_):
         session = self._get_db_session()
         try:
@@ -71,8 +73,14 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(g_store, 
-                            ).join(f_store
+            results = session.query(f_store,
+                            ).join(g_store,
+                                   f_store.city_name==g_store.city_name,
+                                   f_store.store_id==g_store.store_id,
+                                   f_store.chain_id==g_store.chain_id,
+                                   f_store.store_name==g_store.store_name,
+                                   f_store.store_url==g_store.store_url,
+                                   isouter=True,
                             ).filter(g_store.chk==True).all()
         except Exception as e:
             print(e)
@@ -113,6 +121,41 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
         return results
+
+    def upsert_g_reviews(self, obj_model, objs):
+        session = self._get_db_session()
+        try:
+            obj_ids = {obj.review_id: obj for obj in objs}
+            for each_ in session.query(obj_model).filter(obj_model.review_id.in_(obj_ids.keys())).all():
+                # session.merge(obj_ids.pop(each_.review_id))
+                obj_ids.pop(each_.review_id)
+            session.add_all(obj_ids.values())
+            session.commit()
+        except Exception as exc:
+            print(exc)
+            session.rollback()
+        finally:
+            session.close()
+    
+    def upsert_g_store(self, obj_model, obj):
+        session = self._get_db_session()
+        try:
+            obj_key = [(obj.name, obj.city_name, obj.store_id, obj.chain_id)]
+            results = session.query(obj_model).filter(tuple_(obj_model.name,
+                                                                obj_model.city_name,
+                                                                obj_model.store_id, 
+                                                                obj_model.chain_id).in_(obj_key)).all()
+            if results:
+                session.merge(obj)
+            else:
+                session.add(obj)
+            session.commit()
+
+        except Exception as exc:
+            print(exc)
+            session.rollback()
+        finally:
+            session.close()
 
     def insert_store_df(self, obj_model, store_data):
         session = self._get_db_session()
