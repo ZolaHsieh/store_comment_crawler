@@ -1,5 +1,5 @@
 
-from src import logging_, args
+from src import logging_, args, store_reviews_db
 from src.google_map_crawler.run_google_map_crawler import run_gm_crawler
 from src.foodpanda_crawler.run_foodpanda_crawler import run_fd_crawler
 
@@ -17,6 +17,7 @@ def run_mode():
     except Exception as run_exec:
         logger.error(run_exec)
     finally:
+        store_reviews_db.engine_dispose()
         logger.info(f'The end {args.mode}')
 
 if __name__ == '__main__':

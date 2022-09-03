@@ -23,7 +23,7 @@ def run_gm_crawler():
         g_stores = store_reviews_db.select_uncheck_store(GStore)
         for g_store in tqdm(g_stores):
             if not g_store.reviews_url:
-                Exception('No google store reviews_url')
+                raise Exception('No google store reviews_url')
             google_reviews_crawler = GoogleReviewCrawler(g_store=g_store,
                                                         delay=0, logger=logger)
             store_reviews = google_reviews_crawler.run()
@@ -32,9 +32,8 @@ def run_gm_crawler():
             if suc_bool:
                 g_store.chk = True
                 store_reviews_db.upsert_g_store(GStore, g_store)
-            
+                         
     except Exception as exec:
         logger.error(str(exec))
-    finally:
-        store_reviews_db.engine_dispose()
+
     logger.info('End google_map_crawler job.')

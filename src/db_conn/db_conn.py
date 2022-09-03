@@ -125,8 +125,9 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         suc_bool = False
         try:
-            obj_ids = {obj.review_id: obj for obj in objs}
-            session.query(obj_model).filter(obj_model.review_id.in_(obj_ids.keys())).delete()
+            # obj_ids = {obj.review_id: obj for obj in objs}
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name, obj.store_url) for obj in objs]
+            session.query(obj_model).filter(tuple_(obj_model.city_name, obj_model.store_id, obj_model.chain_id, obj_model.store_name, obj_model.store_url).in_(obj_key)).delete()
             session.add_all(objs)
             session.commit()
             suc_bool = True
