@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, Column, String, DateTime, DECIMAL, Integer, Float, Boolean
+from sqlalchemy import ForeignKey, Column, String, DateTime, DECIMAL, Integer, Float, Boolean, TEXT
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime as dt
@@ -93,6 +93,7 @@ class GStore(Base):
     reviews_url = Column('reviews_url', String(256), nullable=True)
     tags = Column('tags', String(128), nullable=True)
     chk = Column('chk', Boolean, nullable=False)
+    address = Column('address', String(1024))
     record_time = Column(DateTime(timezone=True), server_default=func.now())
 
     city_name = Column('city_name', String(16), ForeignKey('foodpanda_store.city_name', ondelete="CASCADE"), primary_key=True,)
@@ -128,10 +129,10 @@ class GStoreReview(Base):
     reviewer_lang = Column('reviewer_lang', String(16), nullable=True)
     rating = Column('rating', Float, nullable=True)
     date_range = Column('date_range', String(16), nullable=True)
-    review_content = Column('review_content', String(8192), nullable=True)
+    review_content = Column('review_content', TEXT(20000), nullable=True)
     dining_mode = Column('dining_mode', String(16), nullable=True)
     dining_meal_type = Column('dining_meal_type', String(16), nullable=True)
-    pic_url = Column('pic_url', String(4092), nullable=True)
+    pic_url = Column('pic_url', TEXT(20000), nullable=True)
     phone_brand = Column('phone_brand', String(64), nullable=True)
     pic_date = Column('pic_date', String(16), nullable=True)
     record_time = Column(DateTime(timezone=True), server_default=func.now())

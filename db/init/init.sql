@@ -85,6 +85,7 @@ CREATE TABLE `google_store` (
   `reviews_url` varchar(256) DEFAULT NULL,
   `tags` varchar(128) DEFAULT NULL,
   `chk` tinyint(1) NOT NULL,
+  `address` varchar(1024) DEFAULT NULL,
 
   `city_name` varchar(16) DEFAULT NULL,
   `store_id` varchar(16) DEFAULT NULL,
@@ -112,10 +113,10 @@ CREATE TABLE `google_store_review` (
   `reviewer_lang` varchar(16) DEFAULT NULL,
   `rating` float DEFAULT NULL,
   `date_range` varchar(16) DEFAULT NULL,
-  `review_content` varchar(8192) DEFAULT NULL,
+  `review_content` text(20000) DEFAULT NULL,
   `dining_mode` varchar(16) DEFAULT NULL,
   `dining_meal_type` varchar(16) DEFAULT NULL,
-  `pic_url` varchar(4092) DEFAULT NULL,
+  `pic_url` text(20000) DEFAULT NULL,
   `phone_brand` varchar(64) DEFAULT NULL,
   `pic_date` varchar(16) DEFAULT NULL,
 
