@@ -28,9 +28,10 @@ def run_gm_crawler():
                                                         delay=0, logger=logger)
             store_reviews = google_reviews_crawler.run()
             logger.info(f'Update google reviews for {g_store}')
-            store_reviews_db.delsert_g_reviews(GStoreReview, store_reviews)
-            g_store.chk = True
-            store_reviews_db.upsert_g_store(GStore, g_store)
+            suc_bool = store_reviews_db.delsert_g_reviews(GStoreReview, store_reviews)
+            if suc_bool:
+                g_store.chk = True
+                store_reviews_db.upsert_g_store(GStore, g_store)
             
     except Exception as exec:
         logger.error(str(exec))

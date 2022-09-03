@@ -123,16 +123,19 @@ class StoreReviewsDB(DBObj):
         
     def delsert_g_reviews(self, obj_model, objs):
         session = self._get_db_session()
+        suc_bool = False
         try:
             obj_ids = {obj.review_id: obj for obj in objs}
             session.query(obj_model).filter(obj_model.review_id.in_(obj_ids.keys())).delete()
             session.add_all(objs)
             session.commit()
+            suc_bool = True
         except Exception as exc:
             print(exc)
             session.rollback()
         finally:
             session.close()
+        return suc_bool
 
     def upsert_g_reviews(self, obj_model, objs):
         session = self._get_db_session()
