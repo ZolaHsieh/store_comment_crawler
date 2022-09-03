@@ -65,8 +65,7 @@ class GoogleReviewCrawler:
                 response = requests.get(f'{self.reviews_api}?{params_str}', headers=self.headers)
                 if response.status_code != 200:
                     raise Exception('Failed to get reviews')
-                    # self.logger.error('response.status_code: {} ...'.format(str(response.status_code)))
-                    # self.logger.info('Searching.')
+
                 resp_str = response.content.decode().replace(')]}\'', '')
                 reviews = json.loads(resp_str)[2]
                 if reviews is None: break
@@ -90,10 +89,7 @@ class GoogleReviewCrawler:
                     
                     if not (review[14] is None):
                         for pics in review[14]:
-                            review_obj.pic_url = '{},{}'.format(review_obj.pic_url, pics[6][0])
-                            review_obj.phone_brand = pics[21]
-                            review_obj.phone_brand = pics[21][6]
-                            review_obj.phone_brand = pics[21][6][5]
+                            review_obj.pic_url = f'{review_obj.pic_url},{pics[6][0]}'
                             review_obj.phone_brand = pics[21][6][5][2]
                             review_obj.pic_date = ','.join([str(d) for d in pics[21][6][7][0:3]])
 
@@ -122,7 +118,7 @@ class GoogleReviewCrawler:
         except Exception as exc:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            self.logger.error('Other Exception: {}, {}, {}'.format(exc_type, fname, exc_tb.tb_lineno))
+            self.logger.error(f'Other Exception: {exc_type}, {fname}, {exc_tb.tb_lineno}')
 
         return store_reviews
   

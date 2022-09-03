@@ -24,6 +24,7 @@ class FStore(Base):
     chk = Column('chk', Boolean)
     record_time = Column(DateTime(timezone=True), default=dt.now)
 
+    # google_store = relationship("GStore", uselist=False, back_populates="foodpanda_store") 
     # fmenu = relationship("foodpanda_store_menu")
     # fschedule = relationship("foodpanda_store_schedule")
 
@@ -99,7 +100,14 @@ class GStore(Base):
     chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"), primary_key=True)
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
     store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
-    # google_store_review = relationship('GStoreReview', back_populates="google_store")
+
+    # city = relationship('FStore', uselist=False, foreign_keys=[city_name])
+    # store_i = relationship('FStore', uselist=False, foreign_keys=[store_id])
+    # chain = relationship('FStore', uselist=False, foreign_keys=[chain_id])
+    # store_n = relationship('FStore', uselist=False, foreign_keys=[store_name])
+    # store_u = relationship('FStore', uselist=False, foreign_keys=[store_url])
+    # foodpanda_store = relationship("FStore", back_populates="google_store") 
+    # google_store_review = relationship('GStoreReview', backref="google_store")
 
     def __repr__(self):
         return "Store: {}, Rating: {}, Reviews Count: {}, Getting suc: {}"\

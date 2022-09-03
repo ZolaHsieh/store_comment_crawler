@@ -74,7 +74,7 @@ class GoogleStoreCrawler:
         # elements = [webdriver.remote.webelement.WebElement]
         elements = [False]
         try:
-            WebDriverWait(self.chrome_driver, self.delay, 1).until(EC.presence_of_all_elements_located((by, text)))
+            WebDriverWait(self.chrome_driver, self.delay, 2).until(EC.presence_of_all_elements_located((by, text)))
             # WebDriverWait(self.chrome_driver, self.delay).until(EC.visibility_of_all_elements_located((by, text)))
             elements = self.chrome_driver.find_elements(by, text)
         except TimeoutException:
@@ -82,7 +82,7 @@ class GoogleStoreCrawler:
         return elements
 
 
-    def run(self, search_context, f_store) -> Tuple[GStore, bool]:
+    def run(self, f_store) -> Tuple[GStore, bool]:
         store_info  = GoogleStoreInfo()
         suc_bool = False
         g_store = GStore()
@@ -92,51 +92,62 @@ class GoogleStoreCrawler:
             self.chrome_driver.maximize_window()
             self.chrome_driver.get(self.chrome_map_url)
             self.logger.info('Open google maps web page.')
-                # action.ActionChains(chrome)
 
             # 尋找搜尋框與輸入文字 & 搜尋
-            search_input = self._wait_for_elements_ready_and_find(By.XPATH, '//input[@name="q"]')[0]
-            search_input.send_keys(search_context)
-            self.logger.info('Input context - {}'.format(search_context))
-            search_button = self._wait_for_elements_ready_and_find(By.ID, 'searchbox-searchbutton')[0]
-            search_button.click()
-            self.logger.info('Searching store.')
+            # address prefix: (O) (△) (○) (#) (M) (X)
+            address = f_store.address if f_store.address else ''
+            search_context_group = {
+                1: f'{f_store.city_name} {f_store.store_name} {address}',
+                2: f'{f_store.store_name} {address}',
+                3: f'{f_store.store_name}'
+            }
 
-            check_get_uniq_store = self._wait_for_elements_ready_and_find(By.XPATH, '//h1[@class="DUwDvf fontHeadlineLarge"]/span[1]')[0]
+            for key in search_context_group:
+                search_context = search_context_group[key]
+                search_input = self._wait_for_elements_ready_and_find(By.XPATH, '//input[@name="q"]')[0]
+                search_input.clear()
+                search_input.send_keys(search_context)
+                self.logger.info(f'Input context - {search_context}')
+                search_button = self._wait_for_elements_ready_and_find(By.ID, 'searchbox-searchbutton')[0]
+                search_button.click()
+                self.logger.info('Searching store.')
+                check_get_uniq_store = self._wait_for_elements_ready_and_find(By.XPATH, '//h1[@class="DUwDvf fontHeadlineLarge"]/span[1]')[0]
+                if check_get_uniq_store:
+                    break
+
             if not check_get_uniq_store:
                 raise NoSuchElementException('Uniq store not found !!')
 
             # 取得google店家名稱
             g_store_name = self._wait_for_elements_ready_and_find(By.XPATH, '//h1[@class="DUwDvf fontHeadlineLarge"]/span[1]')[0]
             store_info.name = g_store_name.text
-            self.logger.info('Getting stroe - {}'.format(store_info.name))
+            self.logger.info(f'Getting stroe - {store_info.name}')
 
             # avg_rating
             g_avg_rating = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span/span/span[1]')[0]
             store_info.avg_rating = float(g_avg_rating.text)
             
-            self.logger.info('Getting store average rating - {}'.format(store_info.avg_rating))
+            self.logger.info(f'Getting store average rating - {store_info.avg_rating}')
 
             # 類型
             g_category = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="fontBodyMedium"]/span/span/button')[0]
             store_info.category = g_category.text
-            self.logger.info('Getting store category - {}'.format(store_info.category))
+            self.logger.info(f'Getting store category - {store_info.category}')
 
-            # 內用/外帶/外送
+            # 內用/外帶/外送 (店家未設定服務)
             g_services = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="E0DTEd"]/div')
             if g_services[0]:
                 store_info.services = ','.join([service.get_attribute('aria-label') for service in g_services])
-                self.logger.info('Getting store service type - {}'.format(store_info.services))
+                self.logger.info(f'Getting store service type - {store_info.services}')
 
-            # 電話
+            # 電話 # 地址
 
-            # 地址
-
-            # 取得店家tag
+            # 取得店家tag (評論少或是無評論)
             reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
                                                                 '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
-            store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
-            self.logger.info('Get review tags: {}'.format(store_info.tags))
+            if reviews_tags[0]:
+                store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
+                self.logger.info(f'Get review tags: {store_info.tags}')
 
             # 按下更多評論
             more_reviews_button = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span[2]/span/button[@class="DkEaL"]')[0]
@@ -144,7 +155,7 @@ class GoogleStoreCrawler:
             reviews_count = int(''.join(str(str_) for str_ in reviews_count_str))
             more_reviews_button.click()
             store_info.reviews_count = reviews_count
-            self.logger.info('Click more reviews. Count: {}'.format(store_info.reviews_count))
+            self.logger.info(f'Click more reviews. Count: {store_info.reviews_count}')
 
             # 評論scroll到最下方最後一則評論
             scrollable_pane = self.chrome_driver.find_element(By.CSS_SELECTOR, 'div.m6QErb.DxyBCb.kA9KIf.dS8AEf')
@@ -154,15 +165,12 @@ class GoogleStoreCrawler:
 
             # 取得評論 requests (1筆)
             logs = self.chrome_driver.get_log('performance')
-            urls = process_browser_logs_for_network_request_url('{}{}'.format(self.chrome_map_url, self.review_api_url),logs)
+            urls = process_browser_logs_for_network_request_url(f'{self.chrome_map_url}{self.review_api_url}',logs)
             store_info.reviews_url = min(urls, key=len)
-            self.logger.info('Get review request api: {}'.format(store_info.reviews_url))
+            self.logger.info(f'Get review request api: {store_info.reviews_url}')
 
             if not store_info.name:
-                raise Exception('Reviews Url Null !!')
-
-            if (store_info.reviews_url) and (store_info.tags): 
-                suc_bool = True
+                raise Exception('Store name was not found !!')
 
             g_store = GStore(name=store_info.name,
                             services=store_info.services,
@@ -170,19 +178,21 @@ class GoogleStoreCrawler:
                             reviews_count=store_info.reviews_count,
                             reviews_url=store_info.reviews_url,
                             tags=store_info.tags,
-                            chk=suc_bool,
+                            chk=False,
                             city_name=f_store.city_name,
                             store_id=f_store.store_id,
                             chain_id=f_store.chain_id,
                             store_name=f_store.store_name,
                             store_url=f_store.store_url)
-
+            suc_bool = True
         except NoSuchElementException as exc:
-            self.logger.error('NoSuchElementException: {}'.format(str(exc)))
+            suc_bool = False
+            self.logger.error(f'NoSuchElementException: {str(exc)}')
         except Exception as exc:
+            suc_bool = False
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            self.logger.error('Other Exception: {}, {}, {}'.format(exc_type, fname, exc_tb.tb_lineno))
+            self.logger.error(f'Other Exception: {exc_type}, {fname}, {exc_tb.tb_lineno}')
         finally:
             self._close_session()
             self.logger.info('Closing google driver session.')
@@ -193,9 +203,9 @@ class GoogleStoreCrawler:
 if __name__ == '__main__':
     # sample
     country = ''
-    administrative_area = '台北市大安區忠孝東路四段205巷7弄9號(斜對面)' #柒息地串燒屋(台北吉延店)
+    administrative_area = ''
     postal_code = ''
-    store_name='一甲子 東區烤肉' # 台北市大安區延吉街99號
+    store_name=''
     search_context = '{store_name} {administrative_area}'.format(country=country, administrative_area=administrative_area, 
                         postal_code=postal_code, store_name=store_name)
 
