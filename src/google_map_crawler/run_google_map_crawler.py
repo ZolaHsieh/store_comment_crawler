@@ -11,7 +11,6 @@ def run_gm_crawler():
     try:
         # Store
         f_stores = store_reviews_db.select_f_store_to_update(FStore, GStore, args.exist_g_update)
-        print(f_stores)
         for f_store in tqdm(f_stores):
             g_review_crawler = GoogleStoreCrawler(delay=5, logger=logger)
             g_store, suc_bool = g_review_crawler.run(f_store=f_store)
