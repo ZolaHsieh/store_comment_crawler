@@ -43,6 +43,7 @@ class GoogleStoreInfo:
     reviews_count: int = 0
     reviews_url: str = ''
     tags: str = ''
+    address: str = ''
     
 
 class GoogleStoreCrawler:
@@ -140,14 +141,13 @@ class GoogleStoreCrawler:
                 store_info.services = ','.join([service.get_attribute('aria-label') for service in g_services])
                 self.logger.info(f'Getting store service type - {store_info.services}')
 
-            # 電話 # 地址
-
-            # 取得店家tag (評論少或是無評論)
-            reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
-                                                                '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
-            if reviews_tags[0]:
-                store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
-                self.logger.info(f'Get review tags: {store_info.tags}')
+            # 電話 
+            
+            # 地址
+            address = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="rogA2c"]/div[@class="Io6YTe fontBodyMedium"]')
+            if address[0]:
+                store_info.address = address[0].text
+                self.logger.info(f'Get store address: {store_info.address}')
 
             # 按下更多評論
             more_reviews_button = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="F7nice mmu3tf"]/span[2]/span/button[@class="DkEaL"]')[0]
@@ -156,6 +156,13 @@ class GoogleStoreCrawler:
             more_reviews_button.click()
             store_info.reviews_count = reviews_count
             self.logger.info(f'Click more reviews. Count: {store_info.reviews_count}')
+
+            # 取得店家tag (評論少或是無評論)
+            reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
+                                                                '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
+            if reviews_tags[0]:
+                store_info.tags = ','.join([str(r_tag.text) for r_tag in reviews_tags[1:]])
+                self.logger.info(f'Get review tags: {store_info.tags}')
 
             # 評論scroll到最下方最後一則評論
             scrollable_pane = self.chrome_driver.find_element(By.CSS_SELECTOR, 'div.m6QErb.DxyBCb.kA9KIf.dS8AEf')
@@ -179,6 +186,7 @@ class GoogleStoreCrawler:
                             reviews_url=store_info.reviews_url,
                             tags=store_info.tags,
                             chk=False,
+                            address=store_info.address,
                             city_name=f_store.city_name,
                             store_id=f_store.store_id,
                             chain_id=f_store.chain_id,
