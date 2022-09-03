@@ -1,4 +1,4 @@
-# Google Restaurant Store Comment Analysis
+# Google Store Comment Analysis
 
 ## Introduction
     
@@ -12,8 +12,8 @@
 
 - Run job
 ```bash
-    python -m src.main --mode gm_crawl  --db_type mariadb
-    python -m src.main --mode fd_crawl  --db_type mariadb
+    python -m src.main --mode fd_crawl --db_type mariadb
+    python -m src.main --mode gm_crawl --db_type mariadb (--exist_g_update)
 ```
 
 ## Contribution

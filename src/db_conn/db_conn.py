@@ -50,7 +50,7 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(obj_model).filter(obj_model.store_name.like('%{}%'.format(name))).all()
+            results = session.query(obj_model).filter(obj_model.store_name.like(f'%{name}%')).all()
         except Exception as exc:
             pass
         finally:
@@ -69,19 +69,18 @@ class StoreReviewsDB(DBObj):
             session.close()
         return results
     
-    def select_crawl_g_store(self, f_store, g_store):
+    def select_f_store_to_update(self, f_store, g_store, g_exist=False):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(f_store,
-                            ).join(g_store,
-                                   f_store.city_name==g_store.city_name,
-                                   f_store.store_id==g_store.store_id,
-                                   f_store.chain_id==g_store.chain_id,
-                                   f_store.store_name==g_store.store_name,
-                                   f_store.store_url==g_store.store_url,
-                                   isouter=True,
-                            ).filter(g_store.chk==True).all()
+            all_g_stores = session.query(g_store).all()
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name, obj.store_url) for obj in all_g_stores]
+            
+            filter_exp = tuple_(f_store.city_name, f_store.store_id, f_store.chain_id, f_store.store_name, f_store.store_url).in_(obj_key)
+            if g_exist:
+                results = session.query(f_store).filter(filter_exp).all()
+            else:
+                results = session.query(f_store).filter(~filter_exp).all()
         except Exception as e:
             print(e)
             pass
@@ -121,6 +120,19 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
         return results
+        
+    def delsert_g_reviews(self, obj_model, objs):
+        session = self._get_db_session()
+        try:
+            obj_ids = {obj.review_id: obj for obj in objs}
+            session.query(obj_model).filter(obj_model.review_id.in_(obj_ids.keys())).delete()
+            session.add_all(objs)
+            session.commit()
+        except Exception as exc:
+            print(exc)
+            session.rollback()
+        finally:
+            session.close()
 
     def upsert_g_reviews(self, obj_model, objs):
         session = self._get_db_session()
