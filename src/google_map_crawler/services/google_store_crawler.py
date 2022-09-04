@@ -132,8 +132,9 @@ class GoogleStoreCrawler:
 
             # 類型
             g_category = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="fontBodyMedium"]/span/span/button')[0]
-            store_info.category = g_category.text
-            self.logger.info(f'Getting store category - {store_info.category}')
+            if g_category[0]:
+                store_info.category = g_category.text
+                self.logger.info(f'Getting store category - {store_info.category}')
 
             # 內用/外帶/外送 (店家未設定服務)
             g_services = self._wait_for_elements_ready_and_find(By.XPATH, '//div[@class="E0DTEd"]/div')
@@ -158,6 +159,7 @@ class GoogleStoreCrawler:
             self.logger.info(f'Click more reviews. Count: {store_info.reviews_count}')
 
             # 取得店家tag (評論少或是無評論)
+            time.sleep(1)
             reviews_tags = self._wait_for_elements_ready_and_find(By.XPATH, 
                                                                 '//div[@class="m6QErb tLjsW"]/*//span[@class="uEubGf fontBodyMedium" and not (contains(text(), "+"))]')
             if reviews_tags[0]:

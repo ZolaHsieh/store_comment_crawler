@@ -108,7 +108,7 @@ COMMIT;
 CREATE TABLE `google_store_review` (
   `review_id` varchar(96) NOT NULL,
   `reviewer_id` varchar(32) NOT NULL,
-  `reviewer_name` varchar(64) DEFAULT NULL,
+  `reviewer_name` varchar(128) DEFAULT NULL,
   `reviewer_self_count` varchar(16) DEFAULT NULL,
   `reviewer_lang` varchar(16) DEFAULT NULL,
   `rating` float DEFAULT NULL,

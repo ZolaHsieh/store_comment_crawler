@@ -124,7 +124,7 @@ class GStoreReview(Base):
 
     review_id = Column('review_id', String(96), primary_key=True)
     reviewer_id = Column('reviewer_id', String(32), nullable=True)
-    reviewer_name = Column('reviewer_name', String(64), nullable=True)
+    reviewer_name = Column('reviewer_name', String(128), nullable=True)
     reviewer_self_count = Column('reviewer_self_count', String(16), nullable=True)
     reviewer_lang = Column('reviewer_lang', String(16), nullable=True)
     rating = Column('rating', Float, nullable=True)
