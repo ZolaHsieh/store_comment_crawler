@@ -67,6 +67,7 @@ class FoodpandaCrawler():
             # store rating
             tmp = vendor_list_li.find_all("span", class_="rating")
             rating = [(c.text.split('/')[0]).strip() for c in tmp]
+            if rating ==[]: rating=['NA']*len(store_list)
             logger.info('rating list length:'+str(len(rating)))
 
             # get store menu url
@@ -76,9 +77,12 @@ class FoodpandaCrawler():
 
             # store_data_processed
             store_data = self._sotre_data_processed(store_list,rating, store_url, city_name, city_url)
-          
+
+            # update chain store 
+            store_data = self.update_chain_store_id(all_stores = store_data)
+
             # insert store list
-            if not store_data.empty: self.db_obj.insert_store_df(FStore, store_data)
+            if not store_data.empty: self.db_obj.upsert_store_df(FStore, store_data)
             logger.info('get_all_stores_of_city end')
             time.sleep(2)
 
@@ -88,7 +92,7 @@ class FoodpandaCrawler():
     def get_menu(self):
         logger.info('get_menu start.')
         store_data = self.db_obj.select_uncheck_store(FStore)
-        for rows in store_data:
+        for rows in tqdm(store_data):
             if rows.store_id=='': continue
             url = self.menu_api.format(rows.store_id)
             try:
@@ -109,8 +113,7 @@ class FoodpandaCrawler():
                         menu_list['store_id'] = rows.store_id
                         menu_list['chain_id'] = rows.chain_id
                         menu_list['store_name'] = rows.store_name
-                        menu_list['store_url'] = rows.store_url
-                        if not menu_list.empty: self.db_obj.insert_menu_df(FStoreMenu, menu_list)
+                        if not menu_list.empty: self.db_obj.delsert_f_menu(FStoreMenu, menu_list)
 
                     # insert schedules
                     if data['data']['schedules'] != None: 
@@ -119,12 +122,11 @@ class FoodpandaCrawler():
                         tmp_s['store_id'] = rows.store_id
                         tmp_s['city_name'] = rows.city_name
                         tmp_s['chain_id'] = rows.chain_id
-                        tmp_s['store_url'] = rows.store_url
-                        col = ['store_name','store_id','city_name','chain_id','store_url','weekday','opening_type','opening_time','closing_time']
+                        col = ['store_name','store_id','city_name','chain_id','weekday','opening_type','opening_time','closing_time']
                         for c in col: 
                             if c not in list(tmp_s.columns): tmp_s[c] = ''
                             tmp_s[c] = tmp_s[c].astype(str)
-                        if not tmp_s.empty: self.db_obj.insert_schedule_df(FStoreSchedule, tmp_s[col])
+                        if not tmp_s.empty: self.db_obj.delsert_f_schedule(FStoreSchedule, tmp_s[col])
 
                     # update store tbl
                     update_dict = {
@@ -137,20 +139,24 @@ class FoodpandaCrawler():
                     self.db_obj.update_store_info(FStore, update_dict)                        
                     time.sleep(2)
                 else: raise Exception('請求失敗 ' + str(r))
-
+                break
             except Exception as e:
                 logger.info(f'get_menu error:[{rows.store_name}] ' + str(e))
                 time.sleep(2)
                 continue
         logger.info('get_menu end.')
 
-    def update_chain_store_id(self):
+    def update_chain_store_id(self, all_stores=pd.DataFrame(), update_db=False) -> pd.DataFrame:
         logger.info('update_chain_store_id start.')
-        chain_store = self.db_obj.select_chain_store(FStore)
-        for row in chain_store:
-            # store menu url
+        
+        if update_db: all_stores = self.db_obj.select_chain_store(FStore)
+        
+        for i in tqdm(range(all_stores.shape[0])):
+            row = all_stores.iloc[i]
+            if row.chain_id == '': continue
+
             url = self.chain_url.format(row.chain_id)
-            print(row.store_name, url)
+            logger.info(f"{row.store_name} {url}")
             try: 
                 # get store menu by api
                 r = requests.get(url=url, headers=self.headers) 
@@ -160,22 +166,28 @@ class FoodpandaCrawler():
                     web_url = data["data"]["items"][0]['redirection_url']
                     # print(stoe_id, web_url)
 
-                    # update store tbl
-                    update_dict = {'city_name':row.city_name,
-                                    'store_name':row.store_name,
-                                    'chain_id':row.chain_id,
-                                    'store_id':store_id,
-                                    'store_url':web_url}
-                    self.db_obj.update_store_id(FStore, update_dict)
-                    time.sleep(2)
-                    
+                    # update store data
+                    if update_db: 
+                        update_dict = {'city_name':row.city_name,
+                                        'store_name':row.store_name,
+                                        'chain_id':row.chain_id,
+                                        'store_id':store_id,
+                                        'store_url':web_url}
+                        self.db_obj.update_store_id(FStore, update_dict)
+                    else:
+                       all_stores.loc[i,'store_id'] = store_id
+                       all_stores.loc[i,'store_url'] = web_url
+
+                    time.sleep(2)  
                 else: raise Exception('請求失敗 ' + str(r))
-                logger.info('update_chain_store_id end.')
+                
             except Exception as e:
-                logger.info(f'update_chain_store_id error:[{row.store}] '+str(e))
+                logger.info(f'update_chain_store_id error:[{row.store_name}] '+str(e))
                 time.sleep(2)
                 continue
+
         logger.info('update_chain_store_id end.')
+        return all_stores
     
     def _sotre_data_processed(self, store_list,rating, store_url, city_name, city_url):
         

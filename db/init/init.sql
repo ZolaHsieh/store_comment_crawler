@@ -18,7 +18,7 @@ CREATE TABLE `foodpanda_store` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `foodpanda_store`
-  ADD PRIMARY KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`);
+  ADD PRIMARY KEY (`city_name`,`store_id`,`chain_id`,`store_name`);
 COMMIT;
 
 
@@ -37,16 +37,15 @@ CREATE TABLE `foodpanda_store_menu` (
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
-  `store_url` varchar(256) DEFAULT NULL,
   `record_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `foodpanda_store_menu`
   ADD PRIMARY KEY (`dishes_id`),
-  ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`);
+  ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`);
 
 ALTER TABLE `foodpanda_store_menu`
-  ADD CONSTRAINT `foodpanda_store_menu_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
+  ADD CONSTRAINT `foodpanda_store_menu_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;
 
 -- create foodpanda_store_schedule table
@@ -60,19 +59,18 @@ CREATE TABLE `foodpanda_store_schedule` (
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
-  `store_url` varchar(256) DEFAULT NULL,
   `record_time` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `foodpanda_store_schedule`
   ADD PRIMARY KEY (`id_`),
-  ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`);
+  ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`);
 
 ALTER TABLE `foodpanda_store_schedule`
   MODIFY `id_` int(11) NOT NULL AUTO_INCREMENT;
 
 ALTER TABLE `foodpanda_store_schedule`
-  ADD CONSTRAINT `foodpanda_store_schedule_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
+  ADD CONSTRAINT `foodpanda_store_schedule_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;
 
 
@@ -91,7 +89,6 @@ CREATE TABLE `google_store` (
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
-  `store_url` varchar(256) DEFAULT NULL,
 
   `record_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -100,7 +97,7 @@ ALTER TABLE `google_store`
   ADD PRIMARY KEY `store` (`name`,`city_name`,`store_id`,`chain_id`);;
 
 ALTER TABLE `google_store`
-  ADD CONSTRAINT `google_store_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
+  ADD CONSTRAINT `google_store_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;
 
 
@@ -124,7 +121,6 @@ CREATE TABLE `google_store_review` (
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
-  `store_url` varchar(256) DEFAULT NULL,
 
   `record_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
@@ -133,5 +129,5 @@ ALTER TABLE `google_store_review`
   ADD PRIMARY KEY (`review_id`);
 
 ALTER TABLE `google_store_review`
-  ADD CONSTRAINT `google_store_review_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`,`store_url`) REFERENCES `google_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
+  ADD CONSTRAINT `google_store_review_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `google_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;

@@ -16,7 +16,7 @@ class FStore(Base):
 
     store_name = Column('store_name', String(256), primary_key=True)
     rating = Column('rating', String(8))
-    store_url = Column('store_url', String(256), primary_key=True)
+    store_url = Column('store_url', String(256))
 
     address = Column('address', String(1024))
     longitude = Column('longitude', String(16))
@@ -54,7 +54,7 @@ class FStoreMenu(Base):
     store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
     chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
-    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
+    # store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
     
     record_time = Column(DateTime(timezone=True), default=dt.now)
 
@@ -76,9 +76,8 @@ class FStoreSchedule(Base):
     store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"))
     chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"))
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
-    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
+    # store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
 
-    
     def __repr__(self):
         pass
 
@@ -100,7 +99,7 @@ class GStore(Base):
     store_id = Column('store_id', String(16), ForeignKey('foodpanda_store.store_id', ondelete="CASCADE"), primary_key=True)
     chain_id = Column('chain_id', String(16), ForeignKey('foodpanda_store.chain_id', ondelete="CASCADE"), primary_key=True)
     store_name = Column('store_name', String(256), ForeignKey('foodpanda_store.store_name', ondelete="CASCADE"))
-    store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
+    # store_url = Column('store_url', String(256), ForeignKey('foodpanda_store.store_url', ondelete="CASCADE"))
 
     # city = relationship('FStore', uselist=False, foreign_keys=[city_name])
     # store_i = relationship('FStore', uselist=False, foreign_keys=[store_id])
@@ -117,7 +116,6 @@ class GStore(Base):
     @classmethod
     def find_by_name(cls, session, name):
         return session.query(cls).filter_by(name=name).all()
-
 
 class GStoreReview(Base):
     __tablename__ = 'google_store_review'
@@ -141,7 +139,7 @@ class GStoreReview(Base):
     store_id = Column('store_id', String(16), ForeignKey('google_store.store_id', ondelete="CASCADE"))
     chain_id = Column('chain_id', String(16), ForeignKey('google_store.chain_id', ondelete="CASCADE"))
     store_name = Column('store_name', String(256), ForeignKey('google_store.store_name', ondelete="CASCADE"))
-    store_url = Column('store_url', String(256), ForeignKey('google_store.store_url', ondelete="CASCADE"))
+    # store_url = Column('store_url', String(256), ForeignKey('google_store.store_url', ondelete="CASCADE"))
     
     # google_store_city_name = relationship('GStore', back_populates="google_store_review", foreign_keys=city_name)
     # google_store_store_id = relationship('GStore', back_populates="google_store_review", foreign_keys=store_id)
