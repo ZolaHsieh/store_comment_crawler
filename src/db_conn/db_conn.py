@@ -173,55 +173,64 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
 
-    def insert_store_df(self, obj_model, store_data):
+    def upsert_store_df(self, obj_model, store_data):
         session = self._get_db_session()
         try:
-            # data = store_data.to_dict(orient='records')
-            # session.bulk_insert_mappings(obj_model, data)
             for data in store_data.to_dict(orient='records'):
-                q = session.query(obj_model).filter(obj_model.city_name==data['city_name'], 
-                                                                        obj_model.store_id==data['store_id'],
-                                                                        obj_model.chain_id==data['chain_id'],
-                                                                        obj_model.store_name==data['store_name'])
-                if not session.query(literal(True)).filter(q.exists()).scalar():
-                    print('not exist', data['store_name'])
-                    data = obj_model(**data)
-                    session.add(data)
-                    session.commit()
-
-        except Exception as e:
-            print(e)
-            pass
-        finally:
-            session.close()
-
-    def insert_menu_df(self, obj_model, menu_data):
-        session = self._get_db_session()
-        try:
-            for data in menu_data.to_dict(orient='records'):
-                q = session.query(obj_model).filter(obj_model.dishes_id==data['dishes_id'])
-                if not session.query(literal(True)).filter(q.exists()).scalar():
-                    data = obj_model(**data)
+                data = obj_model(**data)
+                obj_key = [(data.store_name, data.city_name, data.store_id, data.chain_id)]
+                results = session.query(obj_model).filter(tuple_(obj_model.store_name,
+                                                                    obj_model.city_name,
+                                                                    obj_model.store_id, 
+                                                                    obj_model.chain_id).in_(obj_key)).all()
+                if results:
+                    session.merge(data)
+                else:
                     session.add(data)
                 session.commit()
-
+            
         except Exception as e:
             print(e)
             pass
         finally:
             session.close()
-
-    def insert_schedule_df(self, obj_model, s_data):
+    
+    def delsert_f_menu(self, obj_model, s_data):
         session = self._get_db_session()
-        # conn = self.engine.connect()
         try:
             data = [obj_model(**s) for s in s_data.to_dict(orient='records')]
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name, obj.dishes_id) for obj in data]
+            
+            session.query(obj_model).\
+                    filter(tuple_(obj_model.city_name, obj_model.store_id, obj_model.chain_id, 
+                                obj_model.store_name, obj_model.dishes_id).\
+                        in_(obj_key)).delete()
+
             session.add_all(data)
             session.commit()
+            
+        except Exception as exc:
+            print(exc)
+            session.rollback()
+        finally:
+            session.close()
 
-        except Exception as e:
-            print(e)
-            pass
+    def delsert_f_schedule(self, obj_model, s_data):
+        session = self._get_db_session()
+        try:
+            data = [obj_model(**s) for s in s_data.to_dict(orient='records')]
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name) for obj in data]
+            
+            session.query(obj_model).\
+                    filter(tuple_(obj_model.city_name, obj_model.store_id, obj_model.chain_id, obj_model.store_name).in_(obj_key)).\
+                    delete()
+
+            session.add_all(data)
+            session.commit()
+            
+        except Exception as exc:
+            print(exc)
+            session.rollback()
         finally:
             session.close()
 

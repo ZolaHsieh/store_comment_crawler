@@ -45,7 +45,7 @@ ALTER TABLE `foodpanda_store_menu`
   ADD KEY `store` (`city_name`,`store_id`,`chain_id`,`store_name`);
 
 ALTER TABLE `foodpanda_store_menu`
-  ADD CONSTRAINT `foodpanda_store_menu_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`, `store_url`);
+  ADD CONSTRAINT `foodpanda_store_menu_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;
 
 -- create foodpanda_store_schedule table
@@ -97,7 +97,7 @@ ALTER TABLE `google_store`
   ADD PRIMARY KEY `store` (`name`,`city_name`,`store_id`,`chain_id`);;
 
 ALTER TABLE `google_store`
-  ADD CONSTRAINT `google_store_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`,);
+  ADD CONSTRAINT `google_store_ibfk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
 COMMIT;
 
 
@@ -121,7 +121,7 @@ CREATE TABLE `google_store_review` (
   `store_id` varchar(16) DEFAULT NULL,
   `chain_id` varchar(16) DEFAULT NULL,
   `store_name` varchar(256) DEFAULT NULL,
-  
+
   `record_time` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
