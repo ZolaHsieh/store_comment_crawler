@@ -109,7 +109,6 @@ class FoodpandaCrawler():
                         menu_list['store_id'] = rows.store_id
                         menu_list['chain_id'] = rows.chain_id
                         menu_list['store_name'] = rows.store_name
-                        menu_list['store_url'] = rows.store_url
                         if not menu_list.empty: self.db_obj.insert_menu_df(FStoreMenu, menu_list)
 
                     # insert schedules
@@ -119,8 +118,7 @@ class FoodpandaCrawler():
                         tmp_s['store_id'] = rows.store_id
                         tmp_s['city_name'] = rows.city_name
                         tmp_s['chain_id'] = rows.chain_id
-                        tmp_s['store_url'] = rows.store_url
-                        col = ['store_name','store_id','city_name','chain_id','store_url','weekday','opening_type','opening_time','closing_time']
+                        col = ['store_name','store_id','city_name','chain_id','weekday','opening_type','opening_time','closing_time']
                         for c in col: 
                             if c not in list(tmp_s.columns): tmp_s[c] = ''
                             tmp_s[c] = tmp_s[c].astype(str)

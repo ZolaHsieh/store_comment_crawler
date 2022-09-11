@@ -74,9 +74,9 @@ class StoreReviewsDB(DBObj):
         results = []
         try:
             all_g_stores = session.query(g_store).all()
-            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name, obj.store_url) for obj in all_g_stores]
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name) for obj in all_g_stores]
             
-            filter_exp = tuple_(f_store.city_name, f_store.store_id, f_store.chain_id, f_store.store_name, f_store.store_url).in_(obj_key)
+            filter_exp = tuple_(f_store.city_name, f_store.store_id, f_store.chain_id, f_store.store_name).in_(obj_key)
             if g_exist:
                 results = session.query(f_store).filter(filter_exp).all()
             else:
@@ -126,8 +126,8 @@ class StoreReviewsDB(DBObj):
         suc_bool = False
         try:
             # obj_ids = {obj.review_id: obj for obj in objs}
-            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name, obj.store_url) for obj in objs]
-            session.query(obj_model).filter(tuple_(obj_model.city_name, obj_model.store_id, obj_model.chain_id, obj_model.store_name, obj_model.store_url).in_(obj_key)).delete()
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name) for obj in objs]
+            session.query(obj_model).filter(tuple_(obj_model.city_name, obj_model.store_id, obj_model.chain_id, obj_model.store_name).in_(obj_key)).delete()
             session.add_all(objs)
             session.commit()
             suc_bool = True
@@ -182,8 +182,7 @@ class StoreReviewsDB(DBObj):
                 q = session.query(obj_model).filter(obj_model.city_name==data['city_name'], 
                                                                         obj_model.store_id==data['store_id'],
                                                                         obj_model.chain_id==data['chain_id'],
-                                                                        obj_model.store_name==data['store_name'],
-                                                                        obj_model.store_url==data['store_url'])
+                                                                        obj_model.store_name==data['store_name'])
                 if not session.query(literal(True)).filter(q.exists()).scalar():
                     print('not exist', data['store_name'])
                     data = obj_model(**data)
