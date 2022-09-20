@@ -40,6 +40,7 @@ class FStore(Base):
 class FStoreProcessed(Base):
     __tablename__ = 'foodpanda_store_processed'
     city_name = Column('city_name', String(16), primary_key=True)
+    new_city_name = Column('new_city_name', String(16))
     store_id = Column('store_id', String(16), primary_key=True)
     chain_id = Column('chain_id', String(16), primary_key=True)
     store_name = Column('store_name', String(256), primary_key=True)

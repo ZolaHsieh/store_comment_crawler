@@ -88,6 +88,25 @@ class StoreReviewsDB(DBObj):
             session.close()
         return results
 
+    def select_f_store_addr_to_update(self, f_store, fp_store, exist_=False):
+        session = self._get_db_session()
+        results = []
+        try:
+            all_fp_stores = session.query(fp_store).all()
+            obj_key = [(obj.city_name, obj.store_id, obj.chain_id, obj.store_name) for obj in all_fp_stores]
+            
+            filter_exp = tuple_(f_store.city_name, f_store.store_id, f_store.chain_id, f_store.store_name).in_(obj_key)
+            if exist_:
+                results = session.query(f_store).filter((filter_exp),(f_store.address!='')).all()
+            else:
+                results = session.query(f_store).filter((~filter_exp), (f_store.address!='')).all()
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+        return results
+
     def select_check_store(self, obj_model):
         session = self._get_db_session()
         results = []
@@ -114,7 +133,7 @@ class StoreReviewsDB(DBObj):
         session = self._get_db_session()
         results = []
         try:
-            results = session.query(obj_model).filter(obj_model.chain_id!='', obj_model.store_id=='').all()
+            results = session.query(obj_model).filter(obj_model.chain_id!='', obj_model.store_id=='').all() #
         except Exception as exc:
             pass
         finally:
@@ -195,6 +214,26 @@ class StoreReviewsDB(DBObj):
         finally:
             session.close()
     
+    def upsert_f_post_stores(self, obj_model, data):
+        session = self._get_db_session()
+        try:
+            obj_key = [(data.store_name, data.city_name, data.store_id, data.chain_id)]
+            results = session.query(obj_model).filter(tuple_(obj_model.store_name,
+                                                                obj_model.city_name,
+                                                                obj_model.store_id, 
+                                                                obj_model.chain_id).in_(obj_key)).all()
+            if results:
+                session.merge(data)
+            else:
+                session.add(data)
+            session.commit()
+            
+        except Exception as e:
+            print(e)
+            pass
+        finally:
+            session.close()
+
     def delsert_f_menu(self, obj_model, s_data):
         session = self._get_db_session()
         try:

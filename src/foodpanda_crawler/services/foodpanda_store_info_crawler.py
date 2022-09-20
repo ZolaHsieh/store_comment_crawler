@@ -100,9 +100,7 @@ class FoodpandaCrawler():
                 r = requests.get(url=url, params=self.menu_params) 
                 if r.status_code == requests.codes.ok:
                     data = r.json()
-                    print('店名:', data['data']['name'])
-                    print('地址:', data['data']['address'])
-                    print('(lon, lat):', data['data']['longitude'], data['data']['latitude']) # latitude longitude
+                    logger.info(f"店名: {data['data']['name']}, 地址: {data['data']['address']} (lon,lat): {data['data']['longitude']},{data['data']['latitude']}")
 
                     ## insert menus
                     if data['data']['menus'] != None: 
@@ -139,7 +137,7 @@ class FoodpandaCrawler():
                     self.db_obj.update_store_info(FStore, update_dict)                        
                     time.sleep(2)
                 else: raise Exception('請求失敗 ' + str(r))
-                break
+                # break
             except Exception as e:
                 logger.info(f'get_menu error:[{rows.store_name}] ' + str(e))
                 time.sleep(2)
@@ -147,9 +145,11 @@ class FoodpandaCrawler():
         logger.info('get_menu end.')
 
     def update_chain_store_id(self, all_stores=pd.DataFrame(), update_db=False) -> pd.DataFrame:
-        logger.info('update_chain_store_id start.')
+        logger.info(f'update_chain_store_id start. update_db = {update_db}')
         
-        if update_db: all_stores = self.db_obj.select_chain_store(FStore)
+        if update_db: 
+            all_stores = self.db_obj.select_chain_store(FStore)
+            all_stores = pd.DataFrame.from_records([s.__dict__ for s in all_stores]).reset_index(drop=True)
         
         for i in tqdm(range(all_stores.shape[0])):
             row = all_stores.iloc[i]
