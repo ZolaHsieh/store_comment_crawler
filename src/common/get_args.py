@@ -9,6 +9,7 @@ def get_():
     parser.add_argument('-s', '--store', action="store_true")
     parser.add_argument('-mn', '--menu', action="store_true")
     parser.add_argument('-uc', '--update_chain', action="store_true")
+    parser.add_argument('-pp', '--post_processed', action="store_true")
 
     args = parser.parse_args()
 

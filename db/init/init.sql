@@ -19,6 +19,28 @@ CREATE TABLE `foodpanda_store` (
 
 ALTER TABLE `foodpanda_store`
   ADD PRIMARY KEY (`city_name`,`store_id`,`chain_id`,`store_name`);
+
+COMMIT;
+
+-- create foodpanda_store_processed table 
+CREATE TABLE `foodpanda_store_processed` (
+  `city_name` varchar(16) NOT NULL,
+  `new_city_name` varchar(16) NOT NULL,
+  `store_id` varchar(16) NOT NULL,
+  `chain_id` varchar(16) NOT NULL,
+  `store_name` varchar(256) NOT NULL,
+  `rating` varchar(8) DEFAULT NULL,
+  `address` varchar(1024) DEFAULT NULL,
+  `record_time` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE `foodpanda_store_processed`
+  ADD PRIMARY KEY (`city_name`,`store_id`,`chain_id`,`store_name`);
+
+ALTER TABLE `foodpanda_store_processed`
+  ADD CONSTRAINT `fstore_post_fk_1` FOREIGN KEY (`city_name`,`store_id`,`chain_id`,`store_name`) REFERENCES `foodpanda_store` (`city_name`, `store_id`, `chain_id`, `store_name`);
+
+
 COMMIT;
 
 

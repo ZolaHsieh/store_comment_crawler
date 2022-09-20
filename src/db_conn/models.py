@@ -37,6 +37,18 @@ class FStore(Base):
         return session.query(cls).filter_by(store=store).all()
 
 
+class FStoreProcessed(Base):
+    __tablename__ = 'foodpanda_store_processed'
+    city_name = Column('city_name', String(16), primary_key=True)
+    new_city_name = Column('new_city_name', String(16))
+    store_id = Column('store_id', String(16), primary_key=True)
+    chain_id = Column('chain_id', String(16), primary_key=True)
+    store_name = Column('store_name', String(256), primary_key=True)
+    rating = Column('rating', String(8))
+    address = Column('address', String(1024))
+    record_time = Column(DateTime(timezone=True), default=dt.now)
+
+
 class FStoreMenu(Base):
     __tablename__ = 'foodpanda_store_menu'
 
@@ -81,6 +93,7 @@ class FStoreSchedule(Base):
     def __repr__(self):
         pass
 
+
 class GStore(Base):
     __tablename__ = 'google_store'
 
@@ -116,6 +129,7 @@ class GStore(Base):
     @classmethod
     def find_by_name(cls, session, name):
         return session.query(cls).filter_by(name=name).all()
+
 
 class GStoreReview(Base):
     __tablename__ = 'google_store_review'
